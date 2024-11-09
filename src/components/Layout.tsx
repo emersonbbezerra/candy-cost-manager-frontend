@@ -12,7 +12,6 @@ const Layout: React.FC<LayoutProps> = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
-  // useEffect(() => {}, [location, isAuthenticated, user]);
   const handleLogout = async () => {
     try {
       await logout();
