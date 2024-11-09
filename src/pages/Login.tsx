@@ -7,7 +7,7 @@ import {
   Typography,
 } from '@mui/material';
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const Login: React.FC = () => {
@@ -84,6 +84,8 @@ const Login: React.FC = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={loading}
+            error={!!error} // Adiciona borda vermelha se houver erro
+            helperText={error ? 'E-mail ou senha incorretos.' : ''}
           />
           <Button
             type="submit"
@@ -95,6 +97,15 @@ const Login: React.FC = () => {
             {loading ? 'Entrando...' : 'Entrar'}
           </Button>
         </Box>
+        <Typography variant="body2" sx={{ mt: 2 }}>
+          Não tem uma conta?{' '}
+          <Link
+            to="/register"
+            style={{ textDecoration: 'none', color: 'primary.main' }}
+          >
+            Cadastre-se
+          </Link>
+        </Typography>
       </Box>
     </Container>
   );
