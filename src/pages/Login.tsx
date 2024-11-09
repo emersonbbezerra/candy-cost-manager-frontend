@@ -6,7 +6,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 const Login: React.FC = () => {
@@ -15,20 +15,32 @@ const Login: React.FC = () => {
   const [loginError, setLoginError] = useState(() => {
     return localStorage.getItem('loginError') || null;
   });
+  const [fieldsWithError, setFieldsWithError] = useState(() => {
+    return localStorage.getItem('fieldsWithError') === 'true';
+  });
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      localStorage.removeItem('loginError');
+      localStorage.removeItem('fieldsWithError');
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Limpa o erro do localStorage apenas quando iniciar nova tentativa
     localStorage.removeItem('loginError');
+    localStorage.removeItem('fieldsWithError');
     setLoginError(null);
-
-    if (!email || !password) {
-      setLoginError('Preencha todos os campos');
-      return;
-    }
+    setFieldsWithError(false);
 
     try {
       await login(email, password);
@@ -39,6 +51,8 @@ const Login: React.FC = () => {
 
       if (err.response?.data?.message.includes('Invalid credentials')) {
         errorMessage = 'Email ou senha inválidos';
+        setFieldsWithError(true);
+        localStorage.setItem('fieldsWithError', 'true');
       } else {
         errorMessage =
           'Desculpe, ocorreu um erro ao fazer login. Tente novamente em alguns minutos.';
@@ -79,6 +93,8 @@ const Login: React.FC = () => {
             autoFocus
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            error={fieldsWithError}
+            helperText={fieldsWithError ? ' ' : ''}
           />
           <TextField
             margin="normal"
@@ -91,6 +107,8 @@ const Login: React.FC = () => {
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            error={fieldsWithError}
+            helperText={fieldsWithError ? ' ' : ''}
           />
           <Button
             type="submit"
