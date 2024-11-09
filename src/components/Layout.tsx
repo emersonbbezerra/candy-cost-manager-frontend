@@ -9,9 +9,10 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = () => {
-  const navigate = useNavigate();
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -20,12 +21,11 @@ const Layout: React.FC<LayoutProps> = () => {
       console.error('Erro ao fazer logout:', error);
     }
   };
-  if (location.pathname === '/login') {
-    return <Outlet />;
-  }
+
+  // Removemos a verificação de pathname e deixamos o Login gerenciar seu próprio estado
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      {isAuthenticated && (
+      {isAuthenticated && location.pathname !== '/login' && (
         <AppBar position="static">
           <Toolbar>
             <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
@@ -65,5 +65,4 @@ const Layout: React.FC<LayoutProps> = () => {
     </Box>
   );
 };
-
 export default Layout;

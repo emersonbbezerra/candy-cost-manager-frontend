@@ -8,11 +8,11 @@ interface User {
 }
 
 interface AuthContextData {
-  isAuthenticated: boolean;
   user: User | null;
   loading: boolean;
-  login(email: string, password: string): Promise<User>;
-  logout(): Promise<void>;
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<User>;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -24,86 +24,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadStoredData() {
+    const loadStoredData = async () => {
       const storedToken = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
 
       if (storedToken && storedUser) {
-        try {
-          api.defaults.headers.common['Authorization'] =
-            `Bearer ${storedToken}`;
-          const parsedUser = JSON.parse(storedUser);
-          setUser((prevUser) => {
-            return JSON.stringify(prevUser) !== JSON.stringify(parsedUser)
-              ? parsedUser
-              : prevUser;
-          });
-          setLoading(false);
-        } catch (error) {
-          console.error('Erro ao carregar usuário:', error);
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          setUser(null);
-          setLoading(false);
-        }
-      } else {
-        setLoading(false);
+        api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+        setUser(JSON.parse(storedUser));
       }
-    }
+
+      setLoading(false);
+    };
+
     loadStoredData();
   }, []);
 
-  async function login(email: string, password: string): Promise<User> {
-    try {
-      setLoading(true);
-      const response = await api.post('/users/login', {
-        email,
-        password,
-      });
-      const { token, user: userData } = response.data;
-      if (!token) {
-        throw new Error('Token ou usuário inválido');
-      }
-      const userToStore: User = {
-        id: userData.id || '',
-        name: userData.name || '',
-        email: userData.email || '',
-      };
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(userToStore));
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setUser(userToStore);
-      setLoading(false);
-      return userToStore;
-    } catch (error) {
-      console.error('Erro no login:', error);
-      setLoading(false);
-      throw error;
-    }
-  }
+  const login = async (email: string, password: string): Promise<User> => {
+    const response = await api.post('/users/login', { email, password });
+    const { token, user: userData } = response.data;
 
-  async function logout() {
-    try {
-      setLoading(true);
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      delete api.defaults.headers.common['Authorization'];
-      setUser(null);
-    } catch (error) {
-      console.error('Erro no logout:', error);
-    } finally {
-      setLoading(false);
-    }
-  }
+    const userToStore: User = {
+      id: userData.id,
+      name: userData.name,
+      email: userData.email,
+    };
+
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(userToStore));
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    setUser(userToStore);
+    return userToStore;
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+  };
 
   return (
     <AuthContext.Provider
       value={{
-        isAuthenticated: !!user,
         user,
-        loading,
         login,
         logout,
+        loading,
+        isAuthenticated: !!user,
       }}
     >
       {children}
@@ -111,10 +77,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-}
+export const useAuth = () => useContext(AuthContext);

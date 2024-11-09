@@ -6,37 +6,46 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState(() => {
+    return localStorage.getItem('loginError') || null;
+  });
   const { login } = useAuth();
   const navigate = useNavigate();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
+
+    // Limpa o erro do localStorage apenas quando iniciar nova tentativa
+    localStorage.removeItem('loginError');
+    setLoginError(null);
+
+    if (!email || !password) {
+      setLoginError('Preencha todos os campos');
+      return;
+    }
 
     try {
       await login(email, password);
-      navigate('/');
+      navigate('/dashboard', { replace: true });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      console.error('Erro completo:', err);
-      if (err.response) {
-        setError(err.response.data.message || 'Erro ao fazer login');
-      } else if (err.request) {
-        setError('Erro de conexão com o servidor');
+      let errorMessage = err.response?.data?.message;
+
+      if (err.response?.data?.message.includes('Invalid credentials')) {
+        errorMessage = 'Email ou senha inválidos';
       } else {
-        setError('Ocorreu um erro ao fazer login');
+        errorMessage =
+          'Desculpe, ocorreu um erro ao fazer login. Tente novamente em alguns minutos.';
       }
-    } finally {
-      setLoading(false);
+
+      localStorage.setItem('loginError', errorMessage);
+      setLoginError(errorMessage);
     }
   };
 
@@ -53,9 +62,9 @@ const Login: React.FC = () => {
         <Typography component="h1" variant="h5">
           Login
         </Typography>
-        {error && (
+        {loginError && (
           <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
-            {error}
+            {loginError}
           </Alert>
         )}
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
@@ -70,7 +79,6 @@ const Login: React.FC = () => {
             autoFocus
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            disabled={loading}
           />
           <TextField
             margin="normal"
@@ -83,32 +91,18 @@ const Login: React.FC = () => {
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            disabled={loading}
-            error={!!error} // Adiciona borda vermelha se houver erro
-            helperText={error ? 'E-mail ou senha incorretos.' : ''}
           />
           <Button
             type="submit"
             fullWidth
             variant="contained"
             sx={{ mt: 3, mb: 2 }}
-            disabled={loading}
           >
-            {loading ? 'Entrando...' : 'Entrar'}
+            Entrar
           </Button>
         </Box>
-        <Typography variant="body2" sx={{ mt: 2 }}>
-          Não tem uma conta?{' '}
-          <Link
-            to="/register"
-            style={{ textDecoration: 'none', color: 'primary.main' }}
-          >
-            Cadastre-se
-          </Link>
-        </Typography>
       </Box>
     </Container>
   );
 };
-
 export default Login;

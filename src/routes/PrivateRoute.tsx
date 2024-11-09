@@ -14,8 +14,7 @@ export const PrivateRoute = ({ children }: PrivateRouteProps) => {
     return <div>Carregando...</div>;
   }
 
-  if (!isAuthenticated) {
-    console.warn('PrivateRoute - Não autenticado, redirecionando para login');
+  if (!isAuthenticated && location.pathname !== '/login') {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
