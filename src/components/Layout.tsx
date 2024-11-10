@@ -37,7 +37,7 @@ const Layout: React.FC<LayoutProps> = () => {
               />
             </Box>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              Bem-vindo, {user?.name || user?.email || 'Usuário'}
+              Bem-vindo(a), {user?.name.split(' ')[0] + '!' || 'Usuário!'}
             </Typography>
             <Button
               color="inherit"
