@@ -1,6 +1,7 @@
 import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
 import {
   Alert,
+  Autocomplete,
   Button,
   Container,
   Divider,
@@ -21,9 +22,15 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
-interface Ingredient {
-  ingredientId: string;
+interface Component {
+  componentId: string;
   quantity: number;
+}
+
+interface ComponentSearch {
+  id: string;
+  name: string;
+  unitOfMeasure: string;
 }
 
 const AddProduct = () => {
@@ -39,35 +46,96 @@ const AddProduct = () => {
     yield: 0,
     unitOfMeasure: '',
     salePrice: 0,
-    isIngredient: false,
-    ingredients: [] as Ingredient[],
+    isComponent: false,
+    components: [] as Component[],
   });
 
-  const [ingredients, setIngredients] = useState<Ingredient[]>([
-    { ingredientId: '', quantity: 0 },
+  const [components, setComponents] = useState<Component[]>([
+    { componentId: '', quantity: 0 },
   ]);
 
-  const handleAddIngredient = () => {
-    setIngredients([...ingredients, { ingredientId: '', quantity: 0 }]);
+  const [componentOptions, setComponentOptions] = useState<ComponentSearch[]>(
+    []
+  );
+
+  const searchComponents = async (searchTerm: string) => {
+    try {
+      const response = await api.get(`/components/search?name=${searchTerm}`);
+      setComponentOptions(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar componentes:', error);
+    }
   };
 
-  const handleRemoveIngredient = (index: number) => {
-    const newIngredients = ingredients.filter((_, i) => i !== index);
-    setIngredients(newIngredients);
+  const handleAddComponent = () => {
+    setComponents([...components, { componentId: '', quantity: 0 }]);
   };
 
-  const handleIngredientChange = (
+  const handleRemoveComponent = (index: number) => {
+    const newComponents = components.filter((_, i) => i !== index);
+    setComponents(newComponents);
+  };
+
+  const handleComponentChange = (
     index: number,
-    field: keyof Ingredient,
+    field: keyof Component,
     value: string | number
   ) => {
-    const newIngredients = [...ingredients];
-    newIngredients[index] = {
-      ...newIngredients[index],
+    const newComponents = [...components];
+    newComponents[index] = {
+      ...newComponents[index],
       [field]: value,
     };
-    setIngredients(newIngredients);
+    setComponents(newComponents);
   };
+
+  const renderComponentFields = (component: Component, index: number) => (
+    <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
+      <Grid size={{ xs: 12, md: 6 }}>
+        <Autocomplete
+          fullWidth
+          options={componentOptions}
+          getOptionLabel={(option) => option.name}
+          onChange={(_, newValue) => {
+            if (newValue) {
+              handleComponentChange(index, 'componentId', newValue.id);
+            }
+          }}
+          onInputChange={(_, newInputValue) => {
+            searchComponents(newInputValue);
+          }}
+          renderInput={(params) => (
+            <TextField {...params} label="Nome do Componente" required />
+          )}
+        />
+      </Grid>
+      <Grid size={{ xs: 12, md: 4 }}>
+        <TextField
+          fullWidth
+          label="Quantidade"
+          type="number"
+          value={component.quantity}
+          onChange={(e) =>
+            handleComponentChange(index, 'quantity', Number(e.target.value))
+          }
+          required
+        />
+      </Grid>
+      <Grid size={{ xs: 12, md: 2 }}>
+        <IconButton onClick={() => handleRemoveComponent(index)} color="error">
+          <RemoveIcon />
+        </IconButton>
+      </Grid>
+    </Grid>
+  );
+
+  const unitOptions = [
+    { value: 'Gramas', label: 'Gramas' },
+    { value: 'Quilogramas', label: 'Quilogramas' },
+    { value: 'Mililitros', label: 'Mililitros' },
+    { value: 'Litros', label: 'Litros' },
+    { value: 'Unidades', label: 'Unidades' },
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +143,7 @@ const AddProduct = () => {
     try {
       await await api.post('/products', {
         ...productData,
-        ingredients: ingredients,
+        components: components,
       });
       setSnackbarMessage('Produto criado com sucesso!');
       setSeverity('success');
@@ -177,11 +245,11 @@ const AddProduct = () => {
                     })
                   }
                 >
-                  <MenuItem value="g">Gramas (g)</MenuItem>
-                  <MenuItem value="kg">Quilogramas (kg)</MenuItem>
-                  <MenuItem value="ml">Mililitros (ml)</MenuItem>
-                  <MenuItem value="l">Litros (l)</MenuItem>
-                  <MenuItem value="un">Unidades (un)</MenuItem>
+                  {unitOptions.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
             </Grid>
@@ -207,72 +275,32 @@ const AddProduct = () => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={productData.isIngredient}
+                    checked={productData.isComponent}
                     onChange={(e) =>
                       setProductData({
                         ...productData,
-                        isIngredient: e.target.checked,
+                        isComponent: e.target.checked,
                       })
                     }
                   />
                 }
-                label="Este produto também é um ingrediente"
+                label="Este produto também é um componente"
               />
             </Grid>
-            {/* Seção de Ingredientes */}
+            {/* Seção de Componentes */}
             <Grid size={{ xs: 12 }}>
               <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                Ingredientes
+                Componentes
               </Typography>
-              {ingredients.map((ingredient, index) => (
-                <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <TextField
-                      fullWidth
-                      label="ID do Ingrediente"
-                      value={ingredient.ingredientId}
-                      onChange={(e) =>
-                        handleIngredientChange(
-                          index,
-                          'ingredientId',
-                          e.target.value
-                        )
-                      }
-                      required
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    <TextField
-                      fullWidth
-                      label="Quantidade"
-                      type="number"
-                      value={ingredient.quantity}
-                      onChange={(e) =>
-                        handleIngredientChange(
-                          index,
-                          'quantity',
-                          Number(e.target.value)
-                        )
-                      }
-                      required
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 2 }}>
-                    <IconButton
-                      onClick={() => handleRemoveIngredient(index)}
-                      color="error"
-                    >
-                      <RemoveIcon />
-                    </IconButton>
-                  </Grid>
-                </Grid>
-              ))}
+              {components.map((component, index) =>
+                renderComponentFields(component, index)
+              )}
               <Button
                 variant="outlined"
                 startIcon={<AddIcon />}
-                onClick={handleAddIngredient}
+                onClick={handleAddComponent}
               >
-                Adicionar Ingrediente
+                Adicionar Componente
               </Button>
             </Grid>
           </Grid>
