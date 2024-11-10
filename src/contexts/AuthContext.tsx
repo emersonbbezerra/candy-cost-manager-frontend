@@ -32,15 +32,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         try {
           api.defaults.headers.common['Authorization'] =
             `Bearer ${storedToken}`;
-          // Adicionar uma chamada para validar o token
-          await api.get('/users/validate-token');
 
-          const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
+          const response = await api.get('/users/validate-token');
+          const validatedUser = response.data.user;
+
+          setUser(validatedUser);
         } catch (error) {
-          // Se o token for inválido, limpa o localStorage
           localStorage.removeItem('token');
           localStorage.removeItem('user');
+          api.defaults.headers.common['Authorization'] = '';
           setUser(null);
         }
       }
@@ -48,6 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
     loadStoredData();
   }, []);
+
   const login = async (email: string, password: string): Promise<User> => {
     const response = await api.post('/users/login', { email, password });
     const { token, user: userData } = response.data;
