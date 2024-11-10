@@ -75,7 +75,7 @@ const Dashboard = () => {
               color="primary"
               gutterBottom
             >
-              Total de Ingredientes
+              Total de Componentes
             </Typography>
             <Typography component="p" variant="h4">
               156
@@ -168,7 +168,7 @@ const Dashboard = () => {
         <Grid size={{ xs: 12, md: 4 }}>
           <Paper sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom>
-              Gerenciar Ingredientes
+              Gerenciar Componentes
             </Typography>
             <Button
               variant="contained"
@@ -176,7 +176,7 @@ const Dashboard = () => {
               fullWidth
               sx={{ mb: 1 }}
             >
-              Adicionar Novo Ingrediente
+              Adicionar Novo Componente
             </Button>
             <Button
               variant="outlined"
@@ -184,7 +184,7 @@ const Dashboard = () => {
               fullWidth
               sx={{ mb: 1 }}
             >
-              Lista de Ingredientes
+              Lista de Componentes
             </Button>
             <Button variant="outlined" startIcon={<Calculate />} fullWidth>
               Atualizar Preços
