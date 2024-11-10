@@ -24,21 +24,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadStoredData = async () => {
+    async function loadStoredData() {
       const storedToken = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
 
       if (storedToken && storedUser) {
-        api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-        setUser(JSON.parse(storedUser));
+        try {
+          api.defaults.headers.common['Authorization'] =
+            `Bearer ${storedToken}`;
+          // Adicionar uma chamada para validar o token
+          await api.get('/users/validate-token');
+
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+        } catch (error) {
+          // Se o token for inválido, limpa o localStorage
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+        }
       }
-
       setLoading(false);
-    };
-
+    }
     loadStoredData();
   }, []);
-
   const login = async (email: string, password: string): Promise<User> => {
     const response = await api.post('/users/login', { email, password });
     const { token, user: userData } = response.data;

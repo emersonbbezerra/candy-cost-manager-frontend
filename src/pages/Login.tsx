@@ -3,11 +3,12 @@ import {
   Box,
   Button,
   Container,
+  Link,
   TextField,
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -15,6 +16,7 @@ const Login: React.FC = () => {
   const [loginError, setLoginError] = useState(() => {
     return localStorage.getItem('loginError') || null;
   });
+  const [loading, setLoading] = useState(false);
   const [fieldsWithError, setFieldsWithError] = useState(() => {
     return localStorage.getItem('fieldsWithError') === 'true';
   });
@@ -41,6 +43,7 @@ const Login: React.FC = () => {
     localStorage.removeItem('fieldsWithError');
     setLoginError(null);
     setFieldsWithError(false);
+    setLoading(true);
 
     try {
       await login(email, password);
@@ -60,6 +63,8 @@ const Login: React.FC = () => {
 
       localStorage.setItem('loginError', errorMessage);
       setLoginError(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -116,8 +121,18 @@ const Login: React.FC = () => {
             variant="contained"
             sx={{ mt: 3, mb: 2 }}
           >
-            Entrar
+            {loading ? 'Entrando...' : 'Entrar'}
           </Button>
+          <Typography variant="body2" align="center" sx={{ mt: 2 }}>
+            Não tem uma conta?{' '}
+            <Link
+              component={RouterLink}
+              to="/register"
+              sx={{ cursor: 'pointer', textDecoration: 'none' }}
+            >
+              Cadastre-se aqui
+            </Link>
+          </Typography>
         </Box>
       </Box>
     </Container>
