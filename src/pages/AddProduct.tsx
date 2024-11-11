@@ -19,6 +19,7 @@ import {
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import React, { useState } from 'react';
+import { NumericFormat } from 'react-number-format';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
@@ -223,12 +224,15 @@ const AddProduct = () => {
                 label="Rendimento"
                 type="number"
                 value={productData.yield}
-                onChange={(e) =>
-                  setProductData({
-                    ...productData,
-                    yield: Number(e.target.value),
-                  })
-                }
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  if (value >= 0) {
+                    setProductData({
+                      ...productData,
+                      yield: value,
+                    });
+                  }
+                }}
                 sx={{ mb: 2 }}
               />
             </Grid>
@@ -254,19 +258,24 @@ const AddProduct = () => {
               </FormControl>
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
-              <TextField
+              <NumericFormat
+                value={productData.salePrice}
+                thousandSeparator="."
+                decimalSeparator=","
+                prefix="R$ "
+                decimalScale={2}
+                fixedDecimalScale
+                allowNegative={false}
+                customInput={TextField}
                 fullWidth
                 label="Preço de Venda"
-                type="number"
-                value={productData.salePrice}
-                onChange={(e) =>
+                type="text"
+                onValueChange={(values) => {
+                  const { floatValue } = values;
                   setProductData({
                     ...productData,
-                    salePrice: Number(e.target.value),
-                  })
-                }
-                InputProps={{
-                  startAdornment: 'R$',
+                    salePrice: floatValue || 0,
+                  });
                 }}
                 sx={{ mb: 2 }}
               />
