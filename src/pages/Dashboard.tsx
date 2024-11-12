@@ -157,6 +157,7 @@ const Dashboard = () => {
               startIcon={<ListIcon />}
               fullWidth
               sx={{ mb: 1 }}
+              onClick={() => navigate('/products')}
             >
               Lista de Produtos
             </Button>
@@ -183,6 +184,7 @@ const Dashboard = () => {
               startIcon={<ListIcon />}
               fullWidth
               sx={{ mb: 1 }}
+              onClick={() => navigate('/components')}
             >
               Lista de Componentes
             </Button>
