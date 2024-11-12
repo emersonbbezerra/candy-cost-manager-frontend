@@ -22,7 +22,6 @@ const Layout: React.FC<LayoutProps> = () => {
     }
   };
 
-  // Removemos a verificação de pathname e deixamos o Login gerenciar seu próprio estado
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       {isAuthenticated && location.pathname !== '/login' && (
@@ -30,9 +29,9 @@ const Layout: React.FC<LayoutProps> = () => {
           <Toolbar>
             <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
               <img
-                src="/path/to/your/logo.png"
+                src="/images/logo.png"
                 alt="Logo"
-                style={{ height: 40, marginRight: 16, cursor: 'pointer' }}
+                style={{ height: 90, marginRight: -93, cursor: 'pointer' }}
                 onClick={() => navigate('/')}
               />
             </Box>
@@ -53,7 +52,6 @@ const Layout: React.FC<LayoutProps> = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
           display: 'flex',
           flexDirection: 'column',
           minHeight: isAuthenticated ? 'calc(100vh - 64px)' : '100vh',
