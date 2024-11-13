@@ -41,7 +41,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
         flexDirection: 'column',
       }}
     >
-      <Typography variant="h6" sx={{ color: '#1976d2' }}>
+      {/* Aplicando cor de fundo ao nome do produto */}
+      <Typography
+        variant="h6"
+        sx={{
+          backgroundColor: '#282c34', // Cor da AppBar
+          color: 'white', // Cor do texto
+          padding: '8px', // Adicionando um pouco de padding
+          borderRadius: '4px', // Bordas arredondadas
+        }}
+      >
         {name}
       </Typography>
       <Typography variant="body2" sx={{ mb: 1 }}>
