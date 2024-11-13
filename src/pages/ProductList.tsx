@@ -1,36 +1,69 @@
-import { Box, Button, CircularProgress, Fade, Typography } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Fade,
+  IconButton,
+  Modal,
+  Pagination,
+  Snackbar,
+  Typography,
+} from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import React, { useEffect, useState } from 'react';
 import ProductCard from '../components/ProductCard';
+import { IProduct } from '../interfaces/IProduct';
 import api from '../services/api';
 
-interface Component {
-  componentId: string;
-  componentName: string;
-  quantity: number;
-}
-
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  productionCost: number;
-  yield: number;
-  unitOfMeasure: string;
-  salePrice?: number;
-  isComponent: boolean;
-  components: Component[];
-}
+const ConfirmDeleteModal: React.FC<{
+  open: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  productName: string;
+}> = ({ open, onClose, onConfirm, productName }) => {
+  return (
+    <Modal open={open} onClose={onClose}>
+      <Box
+        sx={{
+          padding: 4,
+          backgroundColor: 'white',
+          borderRadius: 2,
+          maxWidth: 400,
+          margin: 'auto',
+          mt: '10%',
+        }}
+      >
+        <Typography variant="h6">
+          Deseja realmente excluir o produto &quot;{productName}&quot;?
+        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+          <Button variant="contained" color="error" onClick={onConfirm}>
+            SIM
+          </Button>
+          <Button variant="outlined" onClick={onClose}>
+            NÃO
+          </Button>
+        </Box>
+      </Box>
+    </Modal>
+  );
+};
 
 const ProductList: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [openModal, setOpenModal] = useState<boolean>(false);
+  const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [severity, setSeverity] = useState<'success' | 'error'>('success');
 
-  // Estados para paginação
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [productsPerPage] = useState<number>(6); // Número de produtos por página
+  // Paginação
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 6; // Número de produtos por página
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -47,26 +80,33 @@ const ProductList: React.FC = () => {
     fetchProducts();
   }, []);
 
-  // Calcular os produtos a serem exibidos
-  const indexOfLastProduct = currentPage * productsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts = products.slice(
-    indexOfFirstProduct,
-    indexOfLastProduct
-  );
-
-  // Calcular o número total de páginas
-  const totalPages = Math.ceil(products.length / productsPerPage);
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
+  const handleEditClick = (product: IProduct) => {
+    setSelectedProduct(product);
+    // Logic for editing (not shown here)
   };
 
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+  const handleDelete = (product: IProduct) => {
+    setSelectedProduct(product);
+    setOpenModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (selectedProduct) {
+      try {
+        await api.delete(`/products/${selectedProduct.id}`);
+        setProducts((prevProducts) =>
+          prevProducts.filter((product) => product.id !== selectedProduct.id)
+        );
+        setSnackbarMessage('Produto excluído com sucesso!');
+        setSeverity('success');
+      } catch (error) {
+        console.error('Erro ao excluir produto:', error);
+        setSnackbarMessage('Erro ao excluir o produto.');
+        setSeverity('error');
+      } finally {
+        setOpenModal(false);
+        setOpenSnackbar(true);
+      }
     }
   };
 
@@ -95,47 +135,73 @@ const ProductList: React.FC = () => {
     );
   }
 
+  // Cálculo de produtos a serem exibidos na página atual
+  const indexOfLastProduct = page * itemsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
+  const currentProducts = products.slice(
+    indexOfFirstProduct,
+    indexOfLastProduct
+  );
+
   return (
     <Box sx={{ padding: 2 }}>
       <Typography variant="h4" gutterBottom>
         Lista de Produtos
       </Typography>
       <Grid container spacing={2}>
-        {currentProducts.map((product, index) => (
+        {currentProducts.map((product) => (
           <Grid size={{ xs: 12, sm: 6, md: 4 }} key={product.id}>
-            <Fade in={true} timeout={(index + 1) * 200}>
+            <Fade in={true} timeout={500}>
               <div>
                 <ProductCard
-                  name={product.name}
-                  description={product.description}
-                  category={product.category}
-                  productionCost={product.productionCost}
-                  yield={product.yield}
-                  unitOfMeasure={product.unitOfMeasure}
-                  salePrice={product.salePrice}
-                  components={product.components.map((component) => ({
-                    componentId: component.componentId,
-                    componentName: component.componentName,
-                    quantity: component.quantity,
-                  }))}
+                  {...product}
+                  onEdit={() => handleEditClick(product)}
+                  onDelete={() => handleDelete(product)}
                 />
               </div>
             </Fade>
           </Grid>
         ))}
       </Grid>
-      {/* Navegação da página */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-        <Button onClick={handlePreviousPage} disabled={currentPage === 1}>
-          Anterior
-        </Button>
-        <Typography>
-          Página {currentPage} de {totalPages}
-        </Typography>
-        <Button onClick={handleNextPage} disabled={currentPage === totalPages}>
-          Próximo
-        </Button>
-      </Box>
+
+      <Pagination
+        count={Math.ceil(products.length / itemsPerPage)}
+        page={page}
+        onChange={(event, value) => setPage(value)}
+        color="primary"
+        sx={{ marginTop: 2, display: 'flex', justifyContent: 'center' }}
+      />
+
+      <ConfirmDeleteModal
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        onConfirm={handleConfirmDelete}
+        productName={selectedProduct?.name || ''}
+      />
+
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={6000}
+        onClose={() => setOpenSnackbar(false)}
+        action={
+          <IconButton
+            size="small"
+            aria-label="close"
+            color="inherit"
+            onClick={() => setOpenSnackbar(false)}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        }
+      >
+        <Alert
+          onClose={() => setOpenSnackbar(false)}
+          severity={severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
