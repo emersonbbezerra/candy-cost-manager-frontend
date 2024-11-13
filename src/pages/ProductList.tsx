@@ -1,27 +1,26 @@
-import {
-  Box,
-  CircularProgress,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-} from '@mui/material';
+import { Box, CircularProgress, Typography } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import React, { useEffect, useState } from 'react';
-import api from '../services/api'; // Ajuste o caminho conforme necessário
+import ProductCard from '../components/ProductCard';
+import api from '../services/api';
+
+interface Component {
+  componentId: string; // ID do componente
+  componentName: string; // Nome do componente
+  quantity: number; // Quantidade do componente
+}
 
 interface Product {
-  id: string; // O ID é uma string, conforme a resposta da API
+  id: string;
   name: string;
   description: string;
   category: string;
   productionCost: number;
   yield: number;
   unitOfMeasure: string;
-  salePrice?: number; // O preço de venda pode não estar presente em todos os produtos
+  salePrice?: number;
+  isComponent: boolean; // Certifique-se de que esta propriedade está aqui
+  components: Component[];
 }
 
 const ProductList: React.FC = () => {
@@ -32,9 +31,8 @@ const ProductList: React.FC = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await api.get('/products'); // Usando o serviço api
-        console.log(response.data); // Verifique a estrutura da resposta
-        setProducts(response.data.products); // Acesse o array de produtos
+        const response = await api.get('/products');
+        setProducts(response.data.products);
       } catch (err) {
         setError('Erro ao carregar os produtos');
       } finally {
@@ -70,54 +68,31 @@ const ProductList: React.FC = () => {
     );
   }
 
-  // Verifique se products é um array antes de usar map
-  if (!Array.isArray(products)) {
-    return (
-      <Box sx={{ padding: 2 }}>
-        <Typography variant="h6" color="error">
-          Dados de produtos inválidos.
-        </Typography>
-      </Box>
-    );
-  }
-
   return (
     <Box sx={{ padding: 2 }}>
       <Typography variant="h4" gutterBottom>
         Lista de Produtos
       </Typography>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Nome</TableCell>
-              <TableCell>Descrição</TableCell>
-              <TableCell>Categoria</TableCell>
-              <TableCell>Custo de Produção</TableCell>
-              <TableCell>Rendimento</TableCell>
-              <TableCell>Unidade de Medida</TableCell>
-              <TableCell>Preço de Venda</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {products.map((product) => (
-              <TableRow key={product.id}>
-                <TableCell>{product.id}</TableCell>
-                <TableCell>{product.name}</TableCell>
-                <TableCell>{product.description}</TableCell>
-                <TableCell>{product.category}</TableCell>
-                <TableCell>{product.productionCost.toFixed(2)}</TableCell>
-                <TableCell>{product.yield}</TableCell>
-                <TableCell>{product.unitOfMeasure}</TableCell>
-                <TableCell>
-                  {product.salePrice ? product.salePrice.toFixed(2) : 'N/A'}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <Grid container spacing={2}>
+        {products.map((product) => (
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={product.id}>
+            <ProductCard
+              name={product.name}
+              description={product.description}
+              category={product.category}
+              productionCost={product.productionCost}
+              yield={product.yield}
+              unitOfMeasure={product.unitOfMeasure}
+              salePrice={product.salePrice}
+              components={product.components.map((component) => ({
+                componentId: component.componentId,
+                componentName: component.componentName,
+                quantity: component.quantity,
+              }))}
+            />
+          </Grid>
+        ))}
+      </Grid>
     </Box>
   );
 };
