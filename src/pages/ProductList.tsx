@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import React, { useEffect, useState } from 'react';
+import EditProductModal from '../components/EditProductModal'; // Importando o modal de edição
 import ProductCard from '../components/ProductCard';
 import { IProduct } from '../interfaces/IProduct';
 import api from '../services/api';
@@ -56,6 +57,7 @@ const ProductList: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [openModal, setOpenModal] = useState<boolean>(false);
+  const [openEditModal, setOpenEditModal] = useState<boolean>(false); // Estado para o modal de edição
   const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -82,7 +84,7 @@ const ProductList: React.FC = () => {
 
   const handleEditClick = (product: IProduct) => {
     setSelectedProduct(product);
-    // Logic for editing (not shown here)
+    setOpenEditModal(true); // Abre o modal de edição
   };
 
   const handleDelete = (product: IProduct) => {
@@ -177,6 +179,20 @@ const ProductList: React.FC = () => {
         onClose={() => setOpenModal(false)}
         onConfirm={handleConfirmDelete}
         productName={selectedProduct?.name || ''}
+      />
+
+      <EditProductModal
+        open={openEditModal}
+        onClose={() => setOpenEditModal(false)}
+        product={selectedProduct}
+        onSave={(updatedProduct: IProduct) => {
+          setProducts((prevProducts) =>
+            prevProducts.map((prod) =>
+              prod.id === updatedProduct.id ? updatedProduct : prod
+            )
+          );
+          setOpenEditModal(false);
+        }}
       />
 
       <Snackbar

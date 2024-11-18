@@ -195,10 +195,20 @@ const AddProduct = () => {
                   }
                   required
                 >
-                  <MenuItem value="doces">Doces</MenuItem>
-                  <MenuItem value="bolos">Bolos</MenuItem>
-                  <MenuItem value="chocolates">Chocolates</MenuItem>
-                  <MenuItem value="outros">Outros</MenuItem>
+                  <MenuItem value="cakebox">Cake Box</MenuItem>
+                  <MenuItem value="caseirinhos">Caseirinhos</MenuItem>
+                  <MenuItem value="chocotones">Chocotones</MenuItem>
+                  <MenuItem value="coberturas">Coberturas</MenuItem>
+                  <MenuItem value="diversos">Diversos</MenuItem>
+                  <MenuItem value="massas">Massas</MenuItem>
+                  <MenuItem value="ovos">Ovos Trufados</MenuItem>
+                  <MenuItem value="recheios">Recheios</MenuItem>
+                  <MenuItem value="sobremesas">Sobremesas</MenuItem>
+                  <MenuItem value="tortas-tradicionais">
+                    Tortas Tradicionais
+                  </MenuItem>
+                  <MenuItem value="tortas-especiais">Tortas Especiais</MenuItem>
+                  <MenuItem value="tortasnoffee">TortasNoffee</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
