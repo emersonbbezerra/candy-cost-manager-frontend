@@ -85,10 +85,12 @@ const AddComponent: React.FC = () => {
       ) {
         setSnackbarMessage('Componente com esse nome e fabricante já existe!');
         setSeverity('error');
+        setSeverityVariant('filled');
         setOpenSnackbar(true);
       } else {
         setSnackbarMessage('Erro ao criar componente!');
         setSeverity('error');
+        setSeverityVariant('filled');
         setOpenSnackbar(true);
       }
     } finally {

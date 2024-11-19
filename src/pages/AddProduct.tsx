@@ -158,6 +158,7 @@ const AddProduct = () => {
       console.error('Erro:', error);
       setSnackbarMessage('Erro ao criar produto');
       setSeverity('error');
+      setSeverityVariant('filled');
       setOpenSnackbar(true);
     } finally {
       setLoading(false);

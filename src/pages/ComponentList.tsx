@@ -109,6 +109,7 @@ const ComponentList: React.FC = () => {
       } catch (error) {
         setSnackbarMessage('Erro ao excluir o componente.');
         setSeverity('error');
+        setSeverityVariant('filled');
       } finally {
         setopenModal(false);
         setOpenSnackbar(true);
@@ -240,6 +241,7 @@ const ComponentList: React.FC = () => {
           } catch (error) {
             setSnackbarMessage('Erro ao atualizar o componente.');
             setSeverity('error');
+            setSeverityVariant('filled');
             setOpenSnackbar(true);
           }
         }}

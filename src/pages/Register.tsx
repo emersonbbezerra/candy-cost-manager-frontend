@@ -96,6 +96,7 @@ const Register = () => {
             errorMessage = 'Já existe um usuário com este email.';
             setSnackbarMessage(errorMessage);
             setSeverity('error');
+            setSeverityVariant('filled');
             setOpenSnackbar(true);
           } else {
             errorMessage = err.response.data.message;

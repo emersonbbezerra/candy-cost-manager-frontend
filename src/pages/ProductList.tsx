@@ -108,6 +108,7 @@ const ProductList: React.FC = () => {
         console.error('Erro ao excluir produto:', error);
         setSnackbarMessage('Erro ao excluir o produto.');
         setSeverity('error');
+        setSeverityVariant('filled');
       } finally {
         setOpenModal(false);
         setOpenSnackbar(true);
