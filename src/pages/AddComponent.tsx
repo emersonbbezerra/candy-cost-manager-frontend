@@ -16,9 +16,11 @@ import {
 import Grid from '@mui/material/Grid2';
 import React, { useState } from 'react';
 import { NumericFormat } from 'react-number-format';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
 const AddComponent: React.FC = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -61,8 +63,18 @@ const AddComponent: React.FC = () => {
       setSeverity('success');
       setSeverityVariant('filled');
       setOpenSnackbar(true);
+
+      setComponentData({
+        name: '',
+        manufacturer: '',
+        price: 0,
+        packageQuantity: 0,
+        unitOfMeasure: '',
+        category: '',
+      });
+
       setTimeout(() => {
-        // Redirecionar para a lista de componentes ou outra página
+        navigate('/components');
       }, 2000);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
