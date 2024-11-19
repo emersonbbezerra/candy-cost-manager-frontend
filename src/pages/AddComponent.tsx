@@ -48,9 +48,7 @@ const AddComponent: React.FC = () => {
 
   const unitOptions = [
     { value: 'Gramas', label: 'Gramas' },
-    { value: 'Quilogramas', label: 'Quilogramas' },
     { value: 'Mililitros', label: 'Mililitros' },
-    { value: 'Litros', label: 'Litros' },
     { value: 'Unidades', label: 'Unidades' },
   ];
 
@@ -197,14 +195,14 @@ const AddComponent: React.FC = () => {
                   }
                   required
                 >
-                  <MenuItem value="acucares">Açúcares</MenuItem>
-                  <MenuItem value="chocolates">Chocolates</MenuItem>
-                  <MenuItem value="corantes">Corantes</MenuItem>
-                  <MenuItem value="diversos">Diversos</MenuItem>
-                  <MenuItem value="embalagens">Embalagens</MenuItem>
-                  <MenuItem value="farinhas">Farinhas</MenuItem>
-                  <MenuItem value="lacteos">Lácteos</MenuItem>
-                  <MenuItem value="pereciveis">Perecíveis</MenuItem>
+                  <MenuItem value="Açúcares">Açúcares</MenuItem>
+                  <MenuItem value="Chocolates">Chocolates</MenuItem>
+                  <MenuItem value="Corantes">Corantes</MenuItem>
+                  <MenuItem value="Diversos">Diversos</MenuItem>
+                  <MenuItem value="Embalagens">Embalagens</MenuItem>
+                  <MenuItem value="Farinhas">Farinhas</MenuItem>
+                  <MenuItem value="Lácteos">Lácteos</MenuItem>
+                  <MenuItem value="Perecíveis">Perecíveis</MenuItem>
                 </Select>
               </FormControl>
             </Grid>

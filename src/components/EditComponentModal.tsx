@@ -168,9 +168,7 @@ const EditComponentModal: React.FC<EditComponentModalProps> = ({
                   required
                 >
                   <MenuItem value="Gramas">Gramas</MenuItem>
-                  <MenuItem value="Quilogramas">Quilogramas</MenuItem>
                   <MenuItem value="Mililitros">Mililitros</MenuItem>
-                  <MenuItem value="Litros">Litros</MenuItem>
                   <MenuItem value="Unidades">Unidades</MenuItem>
                 </Select>
               </FormControl>

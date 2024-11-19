@@ -167,20 +167,20 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   }
                   required
                 >
-                  <MenuItem value="cakebox">Cake Box</MenuItem>
-                  <MenuItem value="caseirinhos">Caseirinhos</MenuItem>
-                  <MenuItem value="chocotones">Chocotones</MenuItem>
-                  <MenuItem value="coberturas">Coberturas</MenuItem>
-                  <MenuItem value="diversos">Diversos</MenuItem>
-                  <MenuItem value="massas">Massas</MenuItem>
-                  <MenuItem value="ovos">Ovos Trufados</MenuItem>
-                  <MenuItem value="recheios">Recheios</MenuItem>
-                  <MenuItem value="sobremesas">Sobremesas</MenuItem>
-                  <MenuItem value="tortas-tradicionais">
+                  <MenuItem value="Cake Box">Cake Box</MenuItem>
+                  <MenuItem value="Caseirinhos">Caseirinhos</MenuItem>
+                  <MenuItem value="Chocotones">Chocotones</MenuItem>
+                  <MenuItem value="Coberturas">Coberturas</MenuItem>
+                  <MenuItem value="Diversos">Diversos</MenuItem>
+                  <MenuItem value="Massas">Massas</MenuItem>
+                  <MenuItem value="Ovos Trufados">Ovos Trufados</MenuItem>
+                  <MenuItem value="Recheios">Recheios</MenuItem>
+                  <MenuItem value="Sobremesas">Sobremesas</MenuItem>
+                  <MenuItem value="Tortas Tradicionais">
                     Tortas Tradicionais
                   </MenuItem>
-                  <MenuItem value="tortas-especiais">Tortas Especiais</MenuItem>
-                  <MenuItem value="tortasnoffee">TortasNoffee</MenuItem>
+                  <MenuItem value="Tortas Especiais">Tortas Especiais</MenuItem>
+                  <MenuItem value="TortasNoffee">TortasNoffee</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
