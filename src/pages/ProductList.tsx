@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Importe useNavigate
 import EditProductModal from '../components/EditProductModal'; // Importando o modal de edição
 import ProductCard from '../components/ProductCard';
 import { IProduct } from '../interfaces/IProduct';
@@ -53,6 +54,7 @@ const ConfirmDeleteModal: React.FC<{
 };
 
 const ProductList: React.FC = () => {
+  const navigate = useNavigate(); // Crie uma instância do navigate
   const [products, setProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -120,7 +122,7 @@ const ProductList: React.FC = () => {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          height: '100vh',
+          height: ' 100vh',
         }}
       >
         <CircularProgress />
@@ -147,9 +149,34 @@ const ProductList: React.FC = () => {
 
   return (
     <Box sx={{ padding: 2 }}>
-      <Typography variant="h4" gutterBottom>
-        Lista de Produtos
-      </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <Typography variant="h4" gutterBottom>
+          Lista de Produtos
+        </Typography>
+        <Box>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => navigate('/products/add')} // Navega para a página de adicionar produto
+            sx={{ marginRight: 2 }}
+          >
+            Adicionar Produto
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={() => navigate('/')} // Redireciona para o Dashboard
+          >
+            Ir para Dashboard
+          </Button>
+        </Box>
+      </Box>
+
       <Grid container spacing={2}>
         {currentProducts.map((product) => (
           <Grid size={{ xs: 12, sm: 6, md: 4 }} key={product.id}>

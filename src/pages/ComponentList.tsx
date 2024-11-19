@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Importe useNavigate
 import ComponentCard from '../components/ComponentCard';
 import EditComponentModal from '../components/EditComponentModal';
 import { IComponentCard } from '../interfaces/IComponent';
@@ -53,6 +54,7 @@ const ConfirmDeleteModal: React.FC<{
 };
 
 const ComponentList: React.FC = () => {
+  const navigate = useNavigate(); // Crie uma instância do navigate
   const [components, setComponents] = useState<IComponentCard[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -148,9 +150,34 @@ const ComponentList: React.FC = () => {
 
   return (
     <Box sx={{ padding: 2 }}>
-      <Typography variant="h4" gutterBottom>
-        Lista de Componentes
-      </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <Typography variant="h4" gutterBottom>
+          Lista de Componentes
+        </Typography>
+        <Box>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => navigate('/components/add')} // Navega para a página de adicionar componente
+            sx={{ marginRight: 2 }}
+          >
+            Adicionar Componente
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={() => navigate('/')} // Redireciona para o Dashboard
+          >
+            Ir para Dashboard
+          </Button>
+        </Box>
+      </Box>
+
       <Grid container spacing={2}>
         {currentComponents.map((component) => (
           <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={component.id}>
