@@ -62,10 +62,11 @@ const ProductList: React.FC = () => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [severity, setSeverity] = useState<'success' | 'error'>('success');
+  const [severityVariant, setSeverityVariant] = useState<'filled'>('filled');
 
   // Paginação
   const [page, setPage] = useState(1);
-  const itemsPerPage = 6; // Número de produtos por página
+  const itemsPerPage = 9; // Número de produtos por página
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -78,7 +79,6 @@ const ProductList: React.FC = () => {
         setLoading(false);
       }
     };
-
     fetchProducts();
   }, []);
 
@@ -101,6 +101,7 @@ const ProductList: React.FC = () => {
         );
         setSnackbarMessage('Produto excluído com sucesso!');
         setSeverity('success');
+        setSeverityVariant('filled');
       } catch (error) {
         console.error('Erro ao excluir produto:', error);
         setSnackbarMessage('Erro ao excluir o produto.');
@@ -137,7 +138,6 @@ const ProductList: React.FC = () => {
     );
   }
 
-  // Cálculo de produtos a serem exibidos na página atual
   const indexOfLastProduct = page * itemsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
   const currentProducts = products.slice(
@@ -199,6 +199,7 @@ const ProductList: React.FC = () => {
         open={openSnackbar}
         autoHideDuration={6000}
         onClose={() => setOpenSnackbar(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         action={
           <IconButton
             size="small"
@@ -213,6 +214,7 @@ const ProductList: React.FC = () => {
         <Alert
           onClose={() => setOpenSnackbar(false)}
           severity={severity}
+          variant={severityVariant}
           sx={{ width: '100%' }}
         >
           {snackbarMessage}

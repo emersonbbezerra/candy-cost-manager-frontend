@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import Layout from '../components/Layout';
+import AddComponent from '../pages/AddComponent';
 import AddProduct from '../pages/AddProduct';
 import ComponentList from '../pages/ComponentList'; // Importando a nova página de lista de componentes
 import Dashboard from '../pages/Dashboard';
@@ -36,6 +37,14 @@ export const AppRoutes = () => {
           element={
             <PrivateRoute>
               <ProductList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/components/add"
+          element={
+            <PrivateRoute>
+              <AddComponent />
             </PrivateRoute>
           }
         />

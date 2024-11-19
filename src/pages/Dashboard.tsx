@@ -176,6 +176,7 @@ const Dashboard = () => {
               startIcon={<AddIcon />}
               fullWidth
               sx={{ mb: 1 }}
+              onClick={() => navigate('/components/add')}
             >
               Adicionar Novo Componente
             </Button>

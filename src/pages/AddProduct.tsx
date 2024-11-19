@@ -40,6 +40,7 @@ const AddProduct = () => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [severity, setSeverity] = useState<'success' | 'error'>('success');
+  const [severityVariant, setSeverityVariant] = useState<'filled'>('filled');
   const [productData, setProductData] = useState({
     name: '',
     description: '',
@@ -148,6 +149,7 @@ const AddProduct = () => {
       });
       setSnackbarMessage('Produto criado com sucesso!');
       setSeverity('success');
+      setSeverityVariant('filled');
       setOpenSnackbar(true);
       setTimeout(() => {
         navigate('/products');
@@ -339,10 +341,12 @@ const AddProduct = () => {
         open={openSnackbar}
         autoHideDuration={6000}
         onClose={() => setOpenSnackbar(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
         <Alert
           onClose={() => setOpenSnackbar(false)}
           severity={severity}
+          variant={severityVariant}
           sx={{ width: '100%' }}
         >
           {snackbarMessage}

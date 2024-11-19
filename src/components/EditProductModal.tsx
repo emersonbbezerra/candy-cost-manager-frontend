@@ -15,8 +15,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import Grid from '@mui/material/Grid2'; // Importando Grid2
-import { SelectChangeEvent } from '@mui/material/Select'; // Importando SelectChangeEvent
+import Grid from '@mui/material/Grid2';
+import { SelectChangeEvent } from '@mui/material/Select';
 import React, { useEffect, useState } from 'react';
 import { IProduct } from '../interfaces/IProduct';
 
@@ -45,7 +45,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
     e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>
   ) => {
     if (formData) {
-      const { name, value } = e.target as HTMLInputElement; // Garantindo que o tipo é HTMLInputElement
+      const { name, value } = e.target as HTMLInputElement;
       setFormData({
         ...formData,
         [name]: value,
@@ -119,11 +119,15 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: 600,
+          width: { xs: '90%', sm: 800 }, // Responsividade
+          maxHeight: '90vh',
           bgcolor: 'background.paper',
           boxShadow: 24,
-          p: 4,
+          p: 3,
           borderRadius: 2,
+          display: 'flex',
+          flexDirection: 'column',
+          overflowY: 'auto', // Permitir rolagem se necessário
         }}
       >
         <IconButton
@@ -132,12 +136,15 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
         >
           <CloseIcon />
         </IconButton>
-        <Typography variant="h6" gutterBottom>
+        <Typography variant="h6" sx={{ mb: 2 }}>
           Editar Produto
         </Typography>
-        <form onSubmit={handleSubmit}>
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+        >
           <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 name="name"
                 label="Nome do Produto"
@@ -145,29 +152,11 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                 onChange={handleChange}
                 required
                 fullWidth
-                margin="normal"
-                slotProps={{
-                  input: { style: { height: '40px' } }, // Ajustando a altura
-                }}
+                size="small"
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-              <TextField
-                name="description"
-                label="Descrição"
-                value={formData?.description || ''}
-                onChange={handleChange}
-                fullWidth
-                margin="normal"
-                multiline
-                rows={2}
-                slotProps={{
-                  input: { style: { height: '40px' } }, // Ajustando a altura
-                }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-              <FormControl fullWidth margin="normal">
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl fullWidth size="small">
                 <InputLabel>Categoria</InputLabel>
                 <Select
                   name="category"
@@ -175,20 +164,41 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   onChange={(e: SelectChangeEvent<string>) =>
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     handleChange(e as any)
-                  } // Cast para evitar erro de tipo
+                  }
                   required
-                  slotProps={{
-                    input: { style: { height: '40px' } }, // Ajustando a altura
-                  }}
                 >
-                  <MenuItem value="doces">Doces</MenuItem>
-                  <MenuItem value="salgados">Salgados</MenuItem>
-                  <MenuItem value="bebidas">Bebidas</MenuItem>
-                  {/* Adicione outras categorias conforme necessário */}
+                  <MenuItem value="cakebox">Cake Box</MenuItem>
+                  <MenuItem value="caseirinhos">Caseirinhos</MenuItem>
+                  <MenuItem value="chocotones">Chocotones</MenuItem>
+                  <MenuItem value="coberturas">Coberturas</MenuItem>
+                  <MenuItem value="diversos">Diversos</MenuItem>
+                  <MenuItem value="massas">Massas</MenuItem>
+                  <MenuItem value="ovos">Ovos Trufados</MenuItem>
+                  <MenuItem value="recheios">Recheios</MenuItem>
+                  <MenuItem value="sobremesas">Sobremesas</MenuItem>
+                  <MenuItem value="tortas-tradicionais">
+                    Tortas Tradicionais
+                  </MenuItem>
+                  <MenuItem value="tortas-especiais">Tortas Especiais</MenuItem>
+                  <MenuItem value="tortasnoffee">TortasNoffee</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                name="description"
+                label="Descrição"
+                value={formData?.description || ''}
+                onChange={handleChange}
+                fullWidth
+                size="small"
+                multiline
+                rows={2}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 4 }}>
               <TextField
                 name="yield"
                 label="Rendimento"
@@ -196,14 +206,11 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                 value={formData?.yield || ''}
                 onChange={handleChange}
                 fullWidth
-                margin="normal"
                 required
-                slotProps={{
-                  input: { style: { height: '40px' } }, // Ajustando a altura
-                }}
+                size="small"
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <Grid size={{ xs: 12, sm: 4 }}>
               <TextField
                 name="salePrice"
                 label="Preço de Venda"
@@ -211,14 +218,11 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                 value={formData?.salePrice || ''}
                 onChange={handleChange}
                 fullWidth
-                margin="normal"
                 required
-                slotProps={{
-                  input: { style: { height: '40px' } }, // Ajustando a altura
-                }}
+                size="small"
               />
             </Grid>
-            <Grid size={{ xs: 12 }}>
+            <Grid size={{ xs: 12, sm: 4 }}>
               <FormControlLabel
                 control={
                   <Switch
@@ -231,83 +235,98 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
               />
             </Grid>
           </Grid>
-          <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-            Componentes do Produto
-          </Typography>
-          <Box sx={{ maxHeight: 200, overflowY: 'auto' }}>
-            {/* Adicionando a barra de rolagem */}
-            {formData?.components.map((component, index) => (
-              <Grid container spacing={2} key={index}>
-                <Grid size={{ xs: 8 }}>
-                  <TextField
-                    name={`componentName-${index}`}
-                    label="Nome do Componente"
-                    value={component.componentName}
-                    onChange={(e) =>
-                      handleComponentChange(
-                        index,
-                        'componentName',
-                        e.target.value
-                      )
-                    }
-                    fullWidth
-                    margin="normal"
-                    slotProps={{
-                      input: { style: { height: '40px' } }, // Ajustando a altura
-                    }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 3 }}>
-                  <TextField
-                    name={`quantity-${index}`}
-                    label="Quantidade"
-                    type="number"
-                    value={component.quantity}
-                    onChange={(e) =>
-                      handleComponentChange(
-                        index,
-                        'quantity',
-                        Number(e.target.value)
-                      )
-                    }
-                    fullWidth
-                    margin="normal"
-                    slotProps={{
-                      input: { style: { height: '40px' } }, // Ajustando a altura
-                    }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 1 }}>
-                  <MuiIconButton
-                    aria-label="Excluir componente"
-                    onClick={() => handleRemoveComponent(index)}
-                  >
-                    <DeleteIcon />
-                  </MuiIconButton>
-                </Grid>
-              </Grid>
-            ))}
-          </Box>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleAddComponent}
-            sx={{ mt: 2 }}
-          >
-            Adicionar Componente
-          </Button>
-          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-            <Button
-              variant="outlined"
-              color="error"
-              onClick={onClose}
-              sx={{ mr: 2 }}
+
+          <Box sx={{ mt: 1 }}>
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+              Componentes do Produto
+            </Typography>
+            <Box
+              sx={{
+                maxHeight: '200px',
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                pr: 1,
+              }}
             >
-              Cancelar
+              {formData?.components.map((component, index) => (
+                <Grid container spacing={2} key={index} sx={{ mb: 1 }}>
+                  <Grid size={{ xs: 12, sm: 8 }}>
+                    <TextField
+                      name={`componentName-${index}`}
+                      label="Nome do Componente"
+                      value={component.componentName}
+                      onChange={(e) =>
+                        handleComponentChange(
+                          index,
+                          'componentName',
+                          e.target.value
+                        )
+                      }
+                      fullWidth
+                      size="small"
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 3 }}>
+                    <TextField
+                      name={`quantity-${index}`}
+                      label="Quantidade"
+                      type="number"
+                      value={component.quantity}
+                      onChange={(e) =>
+                        handleComponentChange(
+                          index,
+                          'quantity',
+                          Number(e.target.value)
+                        )
+                      }
+                      fullWidth
+                      size="small"
+                    />
+                  </Grid>
+                  <Grid
+                    size={{ xs: 12, sm: 1 }}
+                    sx={{ display: 'flex', alignItems: 'center' }}
+                  >
+                    <MuiIconButton
+                      size="small"
+                      onClick={() => handleRemoveComponent(index)}
+                    >
+                      <DeleteIcon />
+                    </MuiIconButton>
+                  </Grid>
+                </Grid>
+              ))}
+            </Box>
+          </Box>
+
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleAddComponent}
+              size="small"
+            >
+              Adicionar Componente
             </Button>
-            <Button type="submit" variant="contained" color="primary">
-              Salvar
-            </Button>
+            <Box>
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={onClose}
+                sx={{ mr: 2 }}
+                size="small"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                size="small"
+              >
+                Salvar
+              </Button>
+            </Box>
           </Box>
         </form>
       </Box>

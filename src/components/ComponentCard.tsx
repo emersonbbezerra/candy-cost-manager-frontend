@@ -3,19 +3,17 @@ import EditIcon from '@mui/icons-material/Edit';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import React from 'react';
-import { IProduct } from '../interfaces/IProduct';
+import { IComponentCard } from '../interfaces/IComponent'; // Importando a interface
 
-const ProductCard: React.FC<
-  IProduct & { onEdit: () => void; onDelete: () => void }
+const ComponentCard: React.FC<
+  IComponentCard & { onEdit: () => void; onDelete: () => void }
 > = ({
   name,
-  description,
-  category,
-  productionCost,
-  yield: productYield,
+  manufacturer,
+  price,
+  packageQuantity,
   unitOfMeasure,
-  salePrice,
-  components,
+  category,
   onEdit,
   onDelete,
 }) => {
@@ -27,7 +25,7 @@ const ProductCard: React.FC<
         padding: 2,
         backgroundColor: '#f9f9f9',
         boxShadow: 2,
-        height: '350px', // Define a altura fixa do card
+        height: '150px', // Define a altura fixa do card
         display: 'flex',
         flexDirection: 'column',
       }}
@@ -45,22 +43,19 @@ const ProductCard: React.FC<
       </Typography>
 
       <Grid container spacing={2} sx={{ mt: 1, flexGrow: 1 }}>
-        {/* Coluna da esquerda com os dados do produto */}
+        {/* Coluna da esquerda com os dados do componente */}
         <Grid size={{ xs: 8 }}>
           <Typography variant="body2" sx={{ mb: 1 }}>
-            {description}
+            Fabricante: {manufacturer}
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#4caf50' }}>
+            Preço: R$ {(price || 0).toFixed(2)}
+          </Typography>
+          <Typography variant="body2">
+            Quantidade: {packageQuantity} {unitOfMeasure}
           </Typography>
           <Typography variant="body2" sx={{ color: '#555' }}>
             Categoria: {category}
-          </Typography>
-          <Typography variant="body2" sx={{ color: '#4caf50' }}>
-            Custo de Produção: R$ {productionCost.toFixed(2)}
-          </Typography>
-          <Typography variant="body2">
-            Rendimento: {productYield} {unitOfMeasure}
-          </Typography>
-          <Typography variant="body2" sx={{ color: '#f44336' }}>
-            Preço de Venda: R$ {salePrice?.toFixed(2)}
           </Typography>
         </Grid>
 
@@ -91,34 +86,8 @@ const ProductCard: React.FC<
           </Tooltip>
         </Grid>
       </Grid>
-
-      {/* Seção para exibir componentes */}
-      <Typography variant="h6" sx={{ mt: 2, color: '#1976d2' }}>
-        Componentes:
-      </Typography>
-      <Box
-        sx={{
-          overflowY: 'auto',
-          maxHeight: '100px', // Mantemos a altura máxima para a lista de componentes
-          border: '1px solid #ccc',
-          borderRadius: 1,
-          padding: 1,
-          backgroundColor: '#fff',
-          mt: 1, // Margem superior para separar dos dados do produto
-        }}
-      >
-        {components.length > 0 ? (
-          components.map((component) => (
-            <Typography variant="body2" key={component.componentId}>
-              {component.componentName} - Quantidade: {component.quantity}
-            </Typography>
-          ))
-        ) : (
-          <Typography variant="body2">Nenhum componente disponível.</Typography>
-        )}
-      </Box>
     </Box>
   );
 };
 
-export default ProductCard;
+export default ComponentCard;

@@ -81,10 +81,10 @@ const Login: React.FC = () => {
 
       navigate('/dashboard');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      let errorMessage = err.response?.data?.message;
+    } catch (error: any) {
+      let errorMessage = error.message;
 
-      if (err.response?.data?.message.includes('Invalid credentials')) {
+      if (errorMessage.includes('Invalid credentials')) {
         errorMessage = 'Email ou senha inválidos';
         setEmailError(true);
         setPasswordError(true);
