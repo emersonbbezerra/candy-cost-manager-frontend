@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Importe useNavigate
+import { useNavigate } from 'react-router-dom';
 import ComponentCard from '../components/ComponentCard';
 import EditComponentModal from '../components/EditComponentModal';
 import { IComponentCard } from '../interfaces/IComponent';
@@ -54,11 +54,11 @@ const ConfirmDeleteModal: React.FC<{
 };
 
 const ComponentList: React.FC = () => {
-  const navigate = useNavigate(); // Crie uma instância do navigate
+  const navigate = useNavigate();
   const [components, setComponents] = useState<IComponentCard[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [openModal, setopenModal] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [selectedComponent, setSelectedComponent] =
     useState<IComponentCard | null>(null);
@@ -69,20 +69,33 @@ const ComponentList: React.FC = () => {
 
   const [page, setPage] = useState(1);
   const itemsPerPage = 12;
+  const [totalPages, setTotalPages] = useState(0); // Para armazenar o total de páginas
+
+  const fetchComponents = async () => {
+    setLoading(true); // Inicia o carregamento
+    try {
+      const response = await api.get('/components', {
+        params: {
+          page: page, // Passa a página atual
+          limit: itemsPerPage, // Passa o limite de componentes por página
+        },
+      });
+      setComponents(response.data.components);
+      setTotalPages(response.data.pagination.totalPages); // Armazena o total de páginas
+      console.log(
+        'Total de componentes carregados:',
+        response.data.components.length
+      );
+    } catch (err) {
+      setError('Erro ao carregar os componentes');
+    } finally {
+      setLoading(false); // Finaliza o carregamento
+    }
+  };
 
   useEffect(() => {
-    const fetchComponents = async () => {
-      try {
-        const response = await api.get('/components');
-        setComponents(response.data.components);
-      } catch (err) {
-        setError('Erro ao carregar os componentes');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchComponents();
-  }, []);
+  }, [page]); // Dependência da página para refazer a requisição
 
   const handleEditClick = (component: IComponentCard) => {
     setSelectedComponent(component);
@@ -91,7 +104,7 @@ const ComponentList: React.FC = () => {
 
   const handleDelete = (component: IComponentCard) => {
     setSelectedComponent(component);
-    setopenModal(true);
+    setOpenModal(true);
   };
 
   const handleConfirmDelete = async () => {
@@ -111,7 +124,7 @@ const ComponentList: React.FC = () => {
         setSeverity('error');
         setSeverityVariant('filled');
       } finally {
-        setopenModal(false);
+        setOpenModal(false);
         setOpenSnackbar(true);
       }
     }
@@ -141,13 +154,6 @@ const ComponentList: React.FC = () => {
       </Box>
     );
   }
-
-  const indexOfLastComponent = page * itemsPerPage;
-  const indexOfFirstComponent = indexOfLastComponent - itemsPerPage;
-  const currentComponents = components.slice(
-    indexOfFirstComponent,
-    indexOfLastComponent
-  );
 
   return (
     <Box sx={{ padding: 2 }}>
@@ -180,7 +186,7 @@ const ComponentList: React.FC = () => {
       </Box>
 
       <Grid container spacing={2}>
-        {currentComponents.map((component) => (
+        {components.map((component) => (
           <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={component.id}>
             <Fade in={true} timeout={500}>
               <div>
@@ -196,16 +202,16 @@ const ComponentList: React.FC = () => {
       </Grid>
 
       <Pagination
-        count={Math.ceil(components.length / itemsPerPage)}
+        count={totalPages} // Atualiza o count com o total de páginas
         page={page}
-        onChange={(event, value) => setPage(value)}
+        onChange={(event, value) => setPage(value)} // Atualiza a página atual
         color="primary"
         sx={{ marginTop: 2, display: 'flex', justifyContent: 'center' }}
       />
 
       <ConfirmDeleteModal
         open={openModal}
-        onClose={() => setopenModal(false)}
+        onClose={() => setOpenModal(false)}
         onConfirm={handleConfirmDelete}
         componentName={selectedComponent?.name || ''}
       />

@@ -60,14 +60,36 @@ const AddProduct = () => {
     []
   );
 
-  const searchComponents = async (searchTerm: string) => {
+  const searchComponentsOrProducts = async (searchTerm: string) => {
     try {
-      const response = await api.get(`/components/search?name=${searchTerm}`);
-      setComponentOptions(response.data);
+      // Primeiro, busque componentes
+      const componentResponse = await api.get(
+        `/components/search?name=${searchTerm}`
+      );
+
+      // Se encontrar componentes, atualize a lista de opções
+      if (componentResponse.data.length > 0) {
+        setComponentOptions(componentResponse.data);
+      } else {
+        // Se não encontrar, busque produtos
+        const productResponse = await api.get(
+          `/products/search?name=${searchTerm}`
+        );
+        setComponentOptions(productResponse.data); // Atualiza a lista com produtos
+      }
     } catch (error) {
-      console.error('Erro ao buscar componentes:', error);
+      console.error('Erro ao buscar componentes ou produtos:', error);
     }
   };
+
+  // const searchComponents = async (searchTerm: string) => {
+  //   try {
+  //     const response = await api.get(`/components/search?name=${searchTerm}`);
+  //     setComponentOptions(response.data);
+  //   } catch (error) {
+  //     console.error('Erro ao buscar componentes:', error);
+  //   }
+  // };
 
   const handleAddComponent = () => {
     setComponents([...components, { componentId: '', quantity: 0 }]);
@@ -104,7 +126,7 @@ const AddProduct = () => {
             }
           }}
           onInputChange={(_, newInputValue) => {
-            searchComponents(newInputValue);
+            searchComponentsOrProducts(newInputValue);
           }}
           renderInput={(params) => (
             <TextField {...params} label="Nome do Componente" required />
