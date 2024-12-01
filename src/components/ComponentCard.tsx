@@ -1,13 +1,22 @@
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import { Box, IconButton, Tooltip, Typography } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import { Box, Card, CardContent, IconButton, Typography } from '@mui/material';
 import React from 'react';
-import { IComponentCard } from '../interfaces/IComponent'; // Importando a interface
 
-const ComponentCard: React.FC<
-  IComponentCard & { onEdit: () => void; onDelete: () => void }
-> = ({
+interface ComponentCardProps {
+  id: string;
+  name: string;
+  manufacturer: string;
+  price: number;
+  packageQuantity: number;
+  unitOfMeasure: string;
+  category: string;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+}
+
+const ComponentCard: React.FC<ComponentCardProps> = ({
+  id,
   name,
   manufacturer,
   price,
@@ -18,75 +27,60 @@ const ComponentCard: React.FC<
   onDelete,
 }) => {
   return (
-    <Box
+    <Card
       sx={{
-        border: '1px solid #ccc',
-        borderRadius: 2,
-        padding: 2,
-        backgroundColor: '#f9f9f9',
-        boxShadow: 2,
-        height: '150px', // Define a altura fixa do card
-        display: 'flex',
-        flexDirection: 'column',
+        minWidth: 285,
+        maxWidth: 345,
+        margin: 2,
+        backgroundColor: '#ffffff',
+        boxShadow: 3,
+        '&:hover': {
+          boxShadow: 6,
+        },
       }}
     >
-      <Typography
-        variant="h6"
-        sx={{
-          backgroundColor: '#282c34',
-          color: 'white',
-          padding: '8px',
-          borderRadius: '4px',
-        }}
-      >
-        {name}
-      </Typography>
+      <CardContent>
+        <Typography variant="h6" component="div" gutterBottom>
+          {name}
+        </Typography>
+        <Typography color="text.secondary">
+          Fabricante: {manufacturer}
+        </Typography>
+        <Typography color="text.secondary">
+          Preço: R$ {price.toFixed(2)}
+        </Typography>
+        <Typography color="text.secondary">
+          Quantidade por pacote: {packageQuantity} {unitOfMeasure}
+        </Typography>
+        <Typography color="text.secondary" gutterBottom>
+          Categoria: {category}
+        </Typography>
 
-      <Grid container spacing={2} sx={{ mt: 1, flexGrow: 1 }}>
-        {/* Coluna da esquerda com os dados do componente */}
-        <Grid size={{ xs: 8 }}>
-          <Typography variant="body2" sx={{ mb: 1 }}>
-            Fabricante: {manufacturer}
-          </Typography>
-          <Typography variant="body2" sx={{ color: '#4caf50' }}>
-            Preço: R$ {(price || 0).toFixed(2)}
-          </Typography>
-          <Typography variant="body2">
-            Quantidade: {packageQuantity} {unitOfMeasure}
-          </Typography>
-          <Typography variant="body2" sx={{ color: '#555' }}>
-            Categoria: {category}
-          </Typography>
-        </Grid>
-
-        {/* Coluna da direita com os ícones de editar e excluir */}
-        <Grid
-          size={{ xs: 4 }}
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'flex-end',
-          }}
-        >
-          <Tooltip title="Editar">
-            <IconButton
-              onClick={onEdit}
-              sx={{ color: '#4caf50', fontSize: '1.5rem' }}
-            >
-              <EditIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Excluir">
-            <IconButton
-              onClick={onDelete}
-              sx={{ color: '#f44336', fontSize: '1.5rem' }}
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Tooltip>
-        </Grid>
-      </Grid>
-    </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+          <IconButton
+            color="primary"
+            onClick={() => {
+              console.log('ComponentCard - Props recebidas:', {
+                id,
+                name,
+                manufacturer,
+                price,
+                packageQuantity,
+                unitOfMeasure,
+                category,
+              });
+              onEdit(id);
+            }}
+            sx={{ mr: 1 }}
+          >
+            <EditIcon />
+          </IconButton>
+          <IconButton color="error" onClick={() => onDelete(id)}>
+            <DeleteIcon />
+          </IconButton>
+        </Box>
+      </CardContent>
+    </Card>
   );
 };
 

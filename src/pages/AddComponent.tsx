@@ -47,9 +47,9 @@ const AddComponent: React.FC = () => {
   };
 
   const unitOptions = [
-    { value: 'Gramas', label: 'Gramas' },
-    { value: 'Mililitros', label: 'Mililitros' },
-    { value: 'Unidades', label: 'Unidades' },
+    { value: 'g', label: 'g' },
+    { value: 'ml', label: 'ml' },
+    { value: 'Und', label: 'Und' },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
