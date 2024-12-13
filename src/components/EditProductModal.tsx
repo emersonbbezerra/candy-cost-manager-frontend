@@ -12,14 +12,7 @@ import Grid from '@mui/material/Grid2';
 import React, { useEffect, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 import { IEditProductModalProps } from '../interfaces/product/IEditProductModalProps';
-import { IProduct } from '../interfaces/product/IProduct';
-import { fetchAvailableComponents } from '../services/api';
-
-interface IProductComponent {
-  componentId: string;
-  componentName: string;
-  quantity: number;
-}
+import { IProduct, IProductComponent } from '../interfaces/product/IProduct';
 
 const EditProductModal: React.FC<IEditProductModalProps> = ({
   open,
@@ -38,22 +31,6 @@ const EditProductModal: React.FC<IEditProductModalProps> = ({
       setProductComponents(product.components);
     }
   }, [product]);
-
-  // Remove this useEffect block
-  useEffect(() => {
-    const loadAvailableComponents = async () => {
-      try {
-        const response = await fetchAvailableComponents();
-        if (response && response.components) {
-          // Remove or comment out the following line:
-          // setAvailableComponents(response.components);
-        }
-      } catch (error) {
-        console.error('Erro ao buscar componentes disponíveis:', error);
-      }
-    };
-    loadAvailableComponents();
-  }, []);
 
   const handleBasicInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

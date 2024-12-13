@@ -1,3 +1,9 @@
+export interface IProductComponent {
+  componentId: string;
+  componentName: string;
+  quantity: number;
+}
+
 export interface IProduct {
   id: string;
   name: string;
@@ -8,9 +14,5 @@ export interface IProduct {
   isComponent: boolean;
   productionCost: number;
   productionCostRatio: number;
-  components: Array<{
-    componentId: string;
-    componentName: string;
-    quantity: number;
-  }>;
+  components: Array<IProductComponent>;
 }
