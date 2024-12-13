@@ -23,7 +23,7 @@ import { NumericFormat } from 'react-number-format';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
-interface Component {
+interface IComponent {
   componentId: string;
   quantity: number;
 }
@@ -49,10 +49,10 @@ const AddProduct = () => {
     unitOfMeasure: '',
     salePrice: 0,
     isComponent: false,
-    components: [] as Component[],
+    components: [] as IComponent[],
   });
 
-  const [components, setComponents] = useState<Component[]>([
+  const [components, setComponents] = useState<IComponent[]>([
     { componentId: '', quantity: 0 },
   ]);
 
@@ -82,15 +82,6 @@ const AddProduct = () => {
     }
   };
 
-  // const searchComponents = async (searchTerm: string) => {
-  //   try {
-  //     const response = await api.get(`/components/search?name=${searchTerm}`);
-  //     setComponentOptions(response.data);
-  //   } catch (error) {
-  //     console.error('Erro ao buscar componentes:', error);
-  //   }
-  // };
-
   const handleAddComponent = () => {
     setComponents([...components, { componentId: '', quantity: 0 }]);
   };
@@ -102,7 +93,7 @@ const AddProduct = () => {
 
   const handleComponentChange = (
     index: number,
-    field: keyof Component,
+    field: keyof IComponent,
     value: string | number
   ) => {
     const newComponents = [...components];
@@ -113,7 +104,7 @@ const AddProduct = () => {
     setComponents(newComponents);
   };
 
-  const renderComponentFields = (component: Component, index: number) => (
+  const renderComponentFields = (component: IComponent, index: number) => (
     <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
       <Grid size={{ xs: 12, md: 6 }}>
         <Autocomplete
@@ -154,16 +145,16 @@ const AddProduct = () => {
   );
 
   const unitOptions = [
-    { value: 'Gramas', label: 'Gramas' },
-    { value: 'Mililitros', label: 'Mililitros' },
-    { value: 'Unidades', label: 'Unidades' },
+    { value: 'G', label: 'g' },
+    { value: 'Ml', label: 'mL' },
+    { value: 'Und', label: 'Und' },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await await api.post('/products', {
+      await api.post('/products', {
         ...productData,
         components: components,
       });
@@ -376,5 +367,4 @@ const AddProduct = () => {
     </Container>
   );
 };
-
 export default AddProduct;

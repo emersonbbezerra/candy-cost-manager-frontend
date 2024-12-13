@@ -47,8 +47,8 @@ const AddComponent: React.FC = () => {
   };
 
   const unitOptions = [
-    { value: 'g', label: 'g' },
-    { value: 'ml', label: 'ml' },
+    { value: 'G', label: 'g' },
+    { value: 'Ml', label: 'mL' },
     { value: 'Und', label: 'Und' },
   ];
 

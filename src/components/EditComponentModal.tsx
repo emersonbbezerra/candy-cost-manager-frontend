@@ -11,38 +11,16 @@ import {
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
+import { IEditComponentData } from '../interfaces/component/IEditComponentData';
+import { IEditComponentModalProps } from '../interfaces/component/IEditComponentModalProps';
 
-interface EditComponentModalProps {
-  open: boolean;
-  onClose: () => void;
-  onSave: (data: EditComponentData) => void;
-  component: {
-    id: string;
-    name: string;
-    manufacturer: string;
-    price: number;
-    packageQuantity: number;
-    unitOfMeasure: string;
-    category: string;
-  };
-}
-
-export interface EditComponentData {
-  name: string;
-  manufacturer: string;
-  price: number;
-  packageQuantity: number;
-  unitOfMeasure: string;
-  category: string;
-}
-
-const EditComponentModal: React.FC<EditComponentModalProps> = ({
+const EditComponentModal: React.FC<IEditComponentModalProps> = ({
   open,
   onClose,
   onSave,
   component,
 }) => {
-  const [formData, setFormData] = useState<EditComponentData>(() => ({
+  const [formData, setFormData] = useState<IEditComponentData>(() => ({
     name: component.name,
     manufacturer: component.manufacturer,
     price: component.price,
@@ -65,7 +43,7 @@ const EditComponentModal: React.FC<EditComponentModalProps> = ({
   }, [component]);
 
   const handleChange = (
-    field: keyof EditComponentData,
+    field: keyof IEditComponentData,
     value: string | number
   ) => {
     setFormData((prev) => ({
@@ -80,8 +58,8 @@ const EditComponentModal: React.FC<EditComponentModalProps> = ({
   };
 
   const unitOptions = [
-    { value: 'g', label: 'g' },
-    { value: 'ml', label: 'ml' },
+    { value: 'G', label: 'g' },
+    { value: 'Ml', label: 'mL' },
     { value: 'Und', label: 'Und' },
   ];
 

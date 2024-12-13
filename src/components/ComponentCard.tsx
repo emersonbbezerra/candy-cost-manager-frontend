@@ -2,20 +2,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { Box, Card, CardContent, IconButton, Typography } from '@mui/material';
 import React from 'react';
+import { IComponentCardProps } from '../interfaces/component/IComponentCardProps';
 
-interface ComponentCardProps {
-  id: string;
-  name: string;
-  manufacturer: string;
-  price: number;
-  packageQuantity: number;
-  unitOfMeasure: string;
-  category: string;
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
-}
-
-const ComponentCard: React.FC<ComponentCardProps> = ({
+const ComponentCard: React.FC<IComponentCardProps> = ({
   id,
   name,
   manufacturer,
@@ -50,7 +39,8 @@ const ComponentCard: React.FC<ComponentCardProps> = ({
           Preço: R$ {price.toFixed(2)}
         </Typography>
         <Typography color="text.secondary">
-          Quantidade por pacote: {packageQuantity} {unitOfMeasure}
+          Quantidade por pacote: {packageQuantity}{' '}
+          {unitOfMeasure.toLocaleLowerCase()}
         </Typography>
         <Typography color="text.secondary" gutterBottom>
           Categoria: {category}

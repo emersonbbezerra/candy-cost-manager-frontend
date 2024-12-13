@@ -36,4 +36,14 @@ api.interceptors.response.use(
   }
 );
 
+export const fetchAvailableComponents = async () => {
+  try {
+    const response = await api.get('/components?limit=1000'); // Ajuste conforme necessário
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao buscar componentes disponíveis:', error);
+    throw error; // Re-throw para que o chamador possa lidar com isso
+  }
+};
+
 export default api;

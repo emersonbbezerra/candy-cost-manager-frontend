@@ -9,26 +9,22 @@ import {
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import React, { useEffect, useState } from 'react';
-import ComponentCard from '../components/ComponentCard';
 import ConfirmationModal from '../components/ConfirmationModal';
-import EditComponentModal from '../components/EditComponentModal';
-import { IComponentCard } from '../interfaces/component/IComponent';
-import { IEditComponentData } from '../interfaces/component/IEditComponentData';
+import { default as EditProductModal } from '../components/EditProductModal';
+import ProductCard from '../components/ProductCard';
+import { IProduct } from '../interfaces/product/IProduct';
 import api from '../services/api';
 
-const ListComponents: React.FC = () => {
-  const [components, setComponents] = useState<IComponentCard[]>([]);
+const ListProducts: React.FC = () => {
+  const [products, setProducts] = useState<IProduct[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [componentToDelete, setComponentToDelete] =
-    useState<IComponentCard | null>(null);
-  const [componentToEdit, setComponentToEdit] = useState<IComponentCard | null>(
-    null
-  );
+  const [productToDelete, setProductToDelete] = useState<IProduct | null>(null);
+  const [productToEdit, setProductToEdit] = useState<IProduct | null>(null);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -41,18 +37,18 @@ const ListComponents: React.FC = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  const fetchComponents = async () => {
+  const fetchProducts = async () => {
     setError(null);
     setLoading(true);
     try {
       const response = await api.get<{
-        components: IComponentCard[];
+        products: IProduct[];
         pagination: {
           total: number;
           totalPages: number;
           currentPage: number;
         };
-      }>('/components', {
+      }>('/products', {
         params: {
           page,
           limit: ITEMS_PER_PAGE,
@@ -60,22 +56,22 @@ const ListComponents: React.FC = () => {
       });
 
       console.log('Resposta da API:', response.data);
-      const { components: responseComponents, pagination } = response.data;
-      if (responseComponents && Array.isArray(responseComponents)) {
-        console.log('Componentes recebidos:', responseComponents);
-        setComponents(responseComponents);
+      const { products: responseProducts, pagination } = response.data;
+      if (responseProducts && Array.isArray(responseProducts)) {
+        console.log('Produtos recebidos:', responseProducts);
+        setProducts(responseProducts);
         setTotalPages(pagination?.totalPages || 1);
       } else {
         console.warn('Invalid response format:', response.data);
-        setComponents([]);
+        setProducts([]);
         setTotalPages(1);
       }
     } catch (error) {
-      console.error('Erro ao buscar componentes:', error);
+      console.error('Erro ao buscar produtos:', error);
       setError(
-        'Erro ao carregar os componentes. Por favor, verifique se o servidor está rodando e tente novamente.'
+        'Erro ao carregar os produtos. Por favor, verifique se o servidor está rodando e tente novamente.'
       );
-      setComponents([]);
+      setProducts([]);
       setTotalPages(1);
     } finally {
       setLoading(false);
@@ -83,66 +79,64 @@ const ListComponents: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchComponents();
+    fetchProducts();
   }, [page]);
 
   useEffect(() => {
-    console.log('Estado components atualizado:', components);
-  }, [components]);
+    console.log('Estado products atualizado:', products);
+  }, [products]);
 
-  const handleSaveEdit = async (data: IEditComponentData) => {
-    if (componentToEdit) {
+  const handleSaveEdit = async (data: IProduct) => {
+    if (productToEdit) {
       try {
-        await api.put(`/components/${componentToEdit.id}`, data);
+        await api.put(`/products/${productToEdit.id}`, data);
         setSnackbar({
           open: true,
-          message: 'Componente atualizado com sucesso!',
+          message: 'Produto atualizado com sucesso!',
           severity: 'success',
         });
-        fetchComponents();
+        fetchProducts();
       } catch (error) {
-        console.error('Erro ao atualizar componente:', error);
+        console.error('Erro ao atualizar produto:', error);
         setSnackbar({
           open: true,
-          message:
-            'Erro ao atualizar o componente. Por favor, tente novamente.',
+          message: 'Erro ao atualizar o produto. Por favor, tente novamente.',
           severity: 'error',
         });
       } finally {
         setEditModalOpen(false);
-        setComponentToEdit(null);
+        setProductToEdit(null);
       }
     }
   };
-
   const handleDelete = (id: string) => {
-    const component = components.find((comp) => comp.id === id);
-    if (component) {
-      setComponentToDelete(component);
+    const product = products.find((prod) => prod.id === id);
+    if (product) {
+      setProductToDelete(product);
       setDeleteModalOpen(true);
     }
   };
 
   const confirmDelete = async () => {
-    if (componentToDelete) {
+    if (productToDelete) {
       try {
-        await api.delete(`/components/${componentToDelete.id}`);
+        await api.delete(`/products/${productToDelete.id}`);
         setSnackbar({
           open: true,
-          message: 'Componente excluído com sucesso!',
+          message: 'Produto excluído com sucesso!',
           severity: 'success',
         });
-        fetchComponents();
+        fetchProducts();
       } catch (error) {
-        console.error('Erro ao deletar componente:', error);
+        console.error('Erro ao deletar produto:', error);
         setSnackbar({
           open: true,
-          message: 'Erro ao deletar o componente. Por favor, tente novamente.',
+          message: 'Erro ao deletar o produto. Por favor, tente novamente.',
           severity: 'error',
         });
       } finally {
         setDeleteModalOpen(false);
-        setComponentToDelete(null);
+        setProductToDelete(null);
       }
     }
   };
@@ -157,7 +151,7 @@ const ListComponents: React.FC = () => {
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom>
-        Lista de Componentes
+        Lista de Produtos
       </Typography>
 
       {error && (
@@ -174,19 +168,19 @@ const ListComponents: React.FC = () => {
         <>
           <Box sx={{ flexGrow: 1, mb: 4 }}>
             <Grid container spacing={3}>
-              {components.map((component) => (
-                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={component.id}>
-                  <ComponentCard
-                    id={component.id}
-                    name={component.name}
-                    manufacturer={component.manufacturer}
-                    price={component.price}
-                    packageQuantity={component.packageQuantity}
-                    unitOfMeasure={component.unitOfMeasure}
-                    category={component.category}
+              {products.map((product) => (
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={product.id}>
+                  <ProductCard
+                    id={product.id}
+                    name={product.name}
+                    category={product.category}
+                    yield={product.yield}
+                    isComponent={product.isComponent}
+                    productionCost={product.productionCost}
+                    productionCostRatio={product.productionCostRatio}
                     onEdit={() => {
-                      console.log('Componente sendo editado:', component);
-                      setComponentToEdit(component);
+                      console.log('Produto sendo editado:', product);
+                      setProductToEdit(product);
                       setEditModalOpen(true);
                     }}
                     onDelete={handleDelete}
@@ -196,7 +190,7 @@ const ListComponents: React.FC = () => {
             </Grid>
           </Box>
 
-          {components.length > 0 && (
+          {products.length > 0 && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
               <Pagination
                 count={totalPages}
@@ -214,18 +208,18 @@ const ListComponents: React.FC = () => {
         open={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={confirmDelete}
-        message={`Você tem certeza que deseja excluir o componente "${componentToDelete?.name}"?`}
+        message={`Você tem certeza que deseja excluir o produto "${productToDelete?.name}"?`}
       />
 
-      {componentToEdit && (
-        <EditComponentModal
+      {productToEdit && (
+        <EditProductModal
           open={editModalOpen}
           onClose={() => {
             setEditModalOpen(false);
-            setComponentToEdit(null);
+            setProductToEdit(null);
           }}
           onSave={handleSaveEdit}
-          component={componentToEdit}
+          product={productToEdit}
         />
       )}
 
@@ -243,4 +237,4 @@ const ListComponents: React.FC = () => {
   );
 };
 
-export default ListComponents;
+export default ListProducts;

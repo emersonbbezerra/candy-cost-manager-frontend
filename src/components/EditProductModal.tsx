@@ -3,111 +3,109 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import {
   Box,
   Button,
-  FormControl,
-  FormControlLabel,
   IconButton,
-  InputLabel,
-  MenuItem,
   Modal,
-  IconButton as MuiIconButton,
-  Select,
-  Switch,
   TextField,
   Typography,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import { SelectChangeEvent } from '@mui/material/Select';
 import React, { useEffect, useState } from 'react';
-import { IProduct } from '../interfaces/IProduct';
+import { NumericFormat } from 'react-number-format';
+import { IEditProductModalProps } from '../interfaces/product/IEditProductModalProps';
+import { IProduct } from '../interfaces/product/IProduct';
+import { fetchAvailableComponents } from '../services/api';
 
-interface EditProductModalProps {
-  open: boolean;
-  onClose: () => void;
-  product: IProduct | null;
-  onSave: (updatedProduct: IProduct) => void;
+interface IProductComponent {
+  componentId: string;
+  componentName: string;
+  quantity: number;
 }
 
-const EditProductModal: React.FC<EditProductModalProps> = ({
+const EditProductModal: React.FC<IEditProductModalProps> = ({
   open,
   onClose,
   product,
   onSave,
 }) => {
   const [formData, setFormData] = useState<IProduct | null>(null);
+  const [productComponents, setProductComponents] = useState<
+    IProductComponent[]
+  >([]);
 
   useEffect(() => {
     if (product) {
       setFormData(product);
+      setProductComponents(product.components);
     }
   }, [product]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>
-  ) => {
-    if (formData) {
-      const { name, value } = e.target as HTMLInputElement;
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
-    }
+  // Remove this useEffect block
+  useEffect(() => {
+    const loadAvailableComponents = async () => {
+      try {
+        const response = await fetchAvailableComponents();
+        if (response && response.components) {
+          // Remove or comment out the following line:
+          // setAvailableComponents(response.components);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar componentes disponíveis:', error);
+      }
+    };
+    loadAvailableComponents();
+  }, []);
+
+  const handleBasicInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) =>
+      prev
+        ? {
+            ...prev,
+            [name]: ['yield', 'salePrice'].includes(name)
+              ? Number(value)
+              : value,
+          }
+        : null
+    );
   };
 
-  const handleSwitchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (formData) {
-      setFormData({
-        ...formData,
-        isComponent: e.target.checked,
-      });
-    }
+  const handleComponentAdd = () => {
+    setProductComponents([
+      ...productComponents,
+      { componentId: '', componentName: '', quantity: 0 },
+    ]);
   };
 
-  const handleComponentChange = (
-    index: number,
-    field: keyof IProduct['components'][number],
-    value: string | number
-  ) => {
-    if (formData) {
-      const updatedComponents = [...formData.components];
-      updatedComponents[index] = {
-        ...updatedComponents[index],
-        [field]: value,
-      };
-      setFormData({
-        ...formData,
-        components: updatedComponents,
-      });
-    }
+  const handleComponentRemove = (index: number) => {
+    setProductComponents((prev) => prev.filter((_, idx) => idx !== index));
   };
 
-  const handleAddComponent = () => {
-    if (formData) {
-      setFormData({
-        ...formData,
-        components: [
-          ...formData.components,
-          { componentId: '', componentName: '', quantity: 0 },
-        ],
-      });
-    }
+  const handleComponentNameChange = (index: number, newName: string) => {
+    const updatedComponents = [...productComponents];
+    updatedComponents[index] = {
+      ...updatedComponents[index],
+      componentName: newName,
+    };
+    setProductComponents(updatedComponents);
   };
 
-  const handleRemoveComponent = (index: number) => {
-    if (formData) {
-      const updatedComponents = formData.components.filter(
-        (_, i) => i !== index
-      );
-      setFormData({
-        ...formData,
-        components: updatedComponents,
-      });
-    }
+  const handleQuantityChange = (index: number, quantity: number) => {
+    const updatedComponents = [...productComponents];
+    updatedComponents[index] = {
+      ...updatedComponents[index],
+      quantity,
+    };
+    setProductComponents(updatedComponents);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData) {
-      onSave(formData);
+      const updatedProduct: IProduct = {
+        ...formData,
+        components: productComponents,
+      };
+      onSave(updatedProduct);
     }
   };
 
@@ -119,7 +117,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: { xs: '90%', sm: 800 }, // Responsividade
+          width: { xs: '90%', sm: 800 },
           maxHeight: '90vh',
           bgcolor: 'background.paper',
           boxShadow: 24,
@@ -127,7 +125,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
           borderRadius: 2,
           display: 'flex',
           flexDirection: 'column',
-          overflowY: 'auto', // Permitir rolagem se necessário
+          overflowY: 'auto',
         }}
       >
         <IconButton
@@ -136,197 +134,110 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
         >
           <CloseIcon />
         </IconButton>
+
         <Typography variant="h6" sx={{ mb: 2 }}>
           Editar Produto
         </Typography>
-        <form
-          onSubmit={handleSubmit}
-          style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
-        >
+
+        <form onSubmit={handleSubmit}>
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 name="name"
                 label="Nome do Produto"
                 value={formData?.name || ''}
-                onChange={handleChange}
+                onChange={handleBasicInfoChange}
+                fullWidth
+                size="small"
                 required
-                fullWidth
-                size="small"
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Categoria</InputLabel>
-                <Select
-                  name="category"
-                  value={formData?.category || ''}
-                  onChange={(e: SelectChangeEvent<string>) =>
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    handleChange(e as any)
-                  }
-                  required
-                >
-                  <MenuItem value="Cake Box">Cake Box</MenuItem>
-                  <MenuItem value="Caseirinhos">Caseirinhos</MenuItem>
-                  <MenuItem value="Chocotones">Chocotones</MenuItem>
-                  <MenuItem value="Coberturas">Coberturas</MenuItem>
-                  <MenuItem value="Diversos">Diversos</MenuItem>
-                  <MenuItem value="Massas">Massas</MenuItem>
-                  <MenuItem value="Ovos Trufados">Ovos Trufados</MenuItem>
-                  <MenuItem value="Recheios">Recheios</MenuItem>
-                  <MenuItem value="Sobremesas">Sobremesas</MenuItem>
-                  <MenuItem value="Tortas Tradicionais">
-                    Tortas Tradicionais
-                  </MenuItem>
-                  <MenuItem value="Tortas Especiais">Tortas Especiais</MenuItem>
-                  <MenuItem value="TortasNoffee">TortasNoffee</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                name="description"
-                label="Descrição"
-                value={formData?.description || ''}
-                onChange={handleChange}
-                fullWidth
-                size="small"
-                multiline
-                rows={2}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 4 }}>
+            <Grid size={{ xs: 12, sm: 3 }}>
               <TextField
                 name="yield"
                 label="Rendimento"
                 type="number"
                 value={formData?.yield || ''}
-                onChange={handleChange}
+                onChange={handleBasicInfoChange}
                 fullWidth
-                required
                 size="small"
+                required
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 4 }}>
-              <TextField
+            <Grid size={{ xs: 12, sm: 3 }}>
+              <NumericFormat
                 name="salePrice"
                 label="Preço de Venda"
-                type="number"
-                value={formData?.salePrice || ''}
-                onChange={handleChange}
+                value={formData?.salePrice || '0'}
+                onChange={handleBasicInfoChange}
+                thousandSeparator="."
+                decimalSeparator=","
+                prefix="R$ "
+                decimalScale={2}
+                fixedDecimalScale
+                allowNegative={false}
+                customInput={TextField}
                 fullWidth
-                required
                 size="small"
+                required
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 4 }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formData?.isComponent || false}
-                    onChange={handleSwitchChange}
-                    name="isComponent"
+
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+                Componentes do Produto
+              </Typography>
+
+              {productComponents.map((comp, index) => (
+                <Box key={index} sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                  <TextField
+                    label="Componente"
+                    value={comp.componentName}
+                    onChange={(e) =>
+                      handleComponentNameChange(index, e.target.value)
+                    }
+                    size="small"
+                    sx={{ flex: 2 }}
+                    autoComplete="off"
                   />
-                }
-                label="É um Componente?"
-              />
+                  <TextField
+                    type="number"
+                    label="Quantidade"
+                    value={comp.quantity}
+                    onChange={(e) =>
+                      handleQuantityChange(index, Number(e.target.value))
+                    }
+                    size="small"
+                  />
+                  <IconButton
+                    onClick={() => handleComponentRemove(index)}
+                    color="error"
+                    size="small"
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
+              ))}
+
+              <Button
+                variant="outlined"
+                onClick={handleComponentAdd}
+                sx={{ mt: 1 }}
+              >
+                Adicionar Componente
+              </Button>
             </Grid>
           </Grid>
 
-          <Box sx={{ mt: 1 }}>
-            <Typography variant="subtitle1" sx={{ mb: 1 }}>
-              Componentes do Produto
-            </Typography>
-            <Box
-              sx={{
-                maxHeight: '200px',
-                overflowY: 'auto',
-                overflowX: 'hidden',
-                pr: 1,
-              }}
-            >
-              {formData?.components.map((component, index) => (
-                <Grid container spacing={2} key={index} sx={{ mb: 1 }}>
-                  <Grid size={{ xs: 12, sm: 8 }}>
-                    <TextField
-                      name={`componentName-${index}`}
-                      label="Nome do Componente"
-                      value={component.componentName}
-                      onChange={(e) =>
-                        handleComponentChange(
-                          index,
-                          'componentName',
-                          e.target.value
-                        )
-                      }
-                      fullWidth
-                      size="small"
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 3 }}>
-                    <TextField
-                      name={`quantity-${index}`}
-                      label="Quantidade"
-                      type="number"
-                      value={component.quantity}
-                      onChange={(e) =>
-                        handleComponentChange(
-                          index,
-                          'quantity',
-                          Number(e.target.value)
-                        )
-                      }
-                      fullWidth
-                      size="small"
-                    />
-                  </Grid>
-                  <Grid
-                    size={{ xs: 12, sm: 1 }}
-                    sx={{ display: 'flex', alignItems: 'center' }}
-                  >
-                    <MuiIconButton
-                      size="small"
-                      onClick={() => handleRemoveComponent(index)}
-                    >
-                      <DeleteIcon />
-                    </MuiIconButton>
-                  </Grid>
-                </Grid>
-              ))}
-            </Box>
-          </Box>
-
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleAddComponent}
-              size="small"
-            >
-              Adicionar Componente
+          <Box
+            sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, gap: 2 }}
+          >
+            <Button variant="outlined" onClick={onClose}>
+              Cancelar
             </Button>
-            <Box>
-              <Button
-                variant="outlined"
-                color="error"
-                onClick={onClose}
-                sx={{ mr: 2 }}
-                size="small"
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                size="small"
-              >
-                Salvar
-              </Button>
-            </Box>
+            <Button type="submit" variant="contained">
+              Salvar
+            </Button>
           </Box>
         </form>
       </Box>
