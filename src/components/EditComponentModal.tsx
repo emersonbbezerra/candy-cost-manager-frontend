@@ -126,40 +126,50 @@ const EditComponentModal: React.FC<IEditComponentModalProps> = ({
               const { floatValue } = values;
               handleChange('price', floatValue || 0);
             }}
-          />
-          <TextField
-            fullWidth
-            label="Quantidade do Pacote"
-            type="number"
-            value={formData.packageQuantity}
-            onChange={(e) =>
-              handleChange('packageQuantity', Number(e.target.value))
-            }
-            margin="normal"
             required
           />
-          <FormControl fullWidth margin="normal">
-            <InputLabel>Unidade de Medida</InputLabel>
-            <Select
-              value={formData.unitOfMeasure}
-              label="Unidade de Medida"
-              onChange={(e) => handleChange('unitOfMeasure', e.target.value)}
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <NumericFormat
+              sx={{ width: '50%' }}
+              label="Quantidade do Pacote"
+              value={formData.packageQuantity}
+              decimalSeparator=","
+              decimalScale={2}
+              allowNegative={false}
+              isAllowed={(values) => {
+                const { floatValue } = values;
+                return floatValue ? floatValue > 0 : false;
+              }}
+              customInput={TextField}
+              onValueChange={(values) => {
+                const { floatValue } = values;
+                handleChange('packageQuantity', floatValue || 1);
+              }}
+              margin="normal"
               required
-            >
-              {unitOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+            />
+            <FormControl sx={{ width: '50%' }} margin="normal">
+              <InputLabel>Unidade de Medida</InputLabel>
+              <Select
+                value={formData.unitOfMeasure}
+                label="Unidade de Medida"
+                onChange={(e) => handleChange('unitOfMeasure', e.target.value)}
+              >
+                {unitOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+
           <FormControl fullWidth margin="normal">
             <InputLabel>Categoria</InputLabel>
             <Select
               value={formData.category}
               label="Categoria"
               onChange={(e) => handleChange('category', e.target.value)}
-              required
             >
               {categoryOptions.map((category) => (
                 <MenuItem key={category} value={category}>
@@ -183,5 +193,4 @@ const EditComponentModal: React.FC<IEditComponentModalProps> = ({
     </Modal>
   );
 };
-
 export default EditComponentModal;
