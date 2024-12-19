@@ -3,8 +3,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import {
   Box,
   Button,
+  FormControl,
   IconButton,
+  InputLabel,
+  MenuItem,
   Modal,
+  Select,
   TextField,
   Typography,
 } from '@mui/material';
@@ -14,25 +18,39 @@ import { NumericFormat } from 'react-number-format';
 import { IEditProductModalProps } from '../interfaces/product/IEditProductModalProps';
 import { IProduct, IProductComponent } from '../interfaces/product/IProduct';
 
+const unitOptions = [
+  { value: 'G', label: 'g' },
+  { value: 'ML', label: 'mL' },
+  { value: 'UND', label: 'und' },
+];
+
+interface ExtendedProduct extends IProduct {
+  unitOfMeasure: string;
+}
+
 const EditProductModal: React.FC<IEditProductModalProps> = ({
   open,
   onClose,
   product,
   onSave,
 }) => {
-  const [formData, setFormData] = useState<IProduct | null>(null);
+  const [formData, setFormData] = useState<ExtendedProduct | null>(null);
   const [productComponents, setProductComponents] = useState<
     IProductComponent[]
   >([]);
 
   useEffect(() => {
     if (product) {
-      setFormData(product);
+      setFormData(product as ExtendedProduct);
       setProductComponents(product.components);
     }
   }, [product]);
 
-  const handleBasicInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBasicInfoChange = (
+    e:
+      | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+      | { target: { name: string; value: string } }
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) =>
       prev
@@ -118,7 +136,7 @@ const EditProductModal: React.FC<IEditProductModalProps> = ({
 
         <form onSubmit={handleSubmit}>
           <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12, sm: 8 }}>
               <TextField
                 name="name"
                 label="Nome do Produto"
@@ -129,35 +147,75 @@ const EditProductModal: React.FC<IEditProductModalProps> = ({
                 required
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 3 }}>
+            <Grid size={{ xs: 12, sm: 4 }}>
               <TextField
-                name="yield"
-                label="Rendimento"
-                type="number"
-                value={formData?.yield || ''}
+                name="category"
+                label="Categoria"
+                value={formData?.category || ''}
                 onChange={handleBasicInfoChange}
                 fullWidth
                 size="small"
                 required
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 3 }}>
-              <NumericFormat
-                name="salePrice"
-                label="Preço de Venda"
-                value={formData?.salePrice || '0'}
+            <Grid size={{ xs: 12, sm: 8 }}>
+              <TextField
+                name="description"
+                label="Descrição"
+                value={formData?.description || ''}
                 onChange={handleBasicInfoChange}
-                thousandSeparator="."
-                decimalSeparator=","
-                prefix="R$ "
-                decimalScale={2}
-                fixedDecimalScale
-                allowNegative={false}
-                customInput={TextField}
                 fullWidth
-                size="small"
+                multiline
+                rows={3}
                 required
               />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <TextField
+                    name="yield"
+                    label="Rendimento"
+                    type="number"
+                    value={formData?.yield || ''}
+                    onChange={handleBasicInfoChange}
+                    size="small"
+                    required
+                    sx={{ flex: 1 }}
+                  />
+                  <FormControl size="small" required sx={{ flex: 1 }}>
+                    <InputLabel>Unidade</InputLabel>
+                    <Select
+                      name="unitOfMeasure"
+                      label="Unidade"
+                      value={formData?.unitOfMeasure?.toUpperCase() || 'G'}
+                      onChange={handleBasicInfoChange}
+                    >
+                      {unitOptions.map((option) => (
+                        <MenuItem key={option.value} value={option.value}>
+                          {option.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+                <NumericFormat
+                  name="salePrice"
+                  label="Preço de Venda"
+                  value={formData?.salePrice || '0'}
+                  onChange={handleBasicInfoChange}
+                  thousandSeparator="."
+                  decimalSeparator=","
+                  prefix="R$ "
+                  decimalScale={2}
+                  fixedDecimalScale
+                  allowNegative={false}
+                  customInput={TextField}
+                  fullWidth
+                  size="small"
+                  required
+                />
+              </Box>
             </Grid>
 
             <Grid size={{ xs: 12 }}>

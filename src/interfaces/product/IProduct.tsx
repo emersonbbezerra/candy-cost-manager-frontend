@@ -10,6 +10,7 @@ export interface IProduct {
   category: string;
   description: string;
   yield: number;
+  yieldUnit: string;
   salePrice: number;
   isComponent: boolean;
   productionCost: number;
