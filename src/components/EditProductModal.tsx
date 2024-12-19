@@ -4,11 +4,13 @@ import {
   Box,
   Button,
   FormControl,
+  FormControlLabel,
   IconButton,
   InputLabel,
   MenuItem,
   Modal,
   Select,
+  Switch,
   TextField,
   Typography,
 } from '@mui/material';
@@ -17,6 +19,21 @@ import React, { useEffect, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 import { IEditProductModalProps } from '../interfaces/product/IEditProductModalProps';
 import { IProduct, IProductComponent } from '../interfaces/product/IProduct';
+
+const categoryOptions = [
+  'Cake Box',
+  'Caseirinhos',
+  'Chocotones',
+  'Coberturas',
+  'Diversos',
+  'Massas',
+  'Ovos Trufados',
+  'Recheios',
+  'Sobremesas',
+  'Tortas Tradicionais',
+  'Tortas Especiais',
+  'TortasNoffee',
+];
 
 const unitOptions = [
   { value: 'G', label: 'g' },
@@ -148,15 +165,21 @@ const EditProductModal: React.FC<IEditProductModalProps> = ({
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
-              <TextField
-                name="category"
-                label="Categoria"
-                value={formData?.category || ''}
-                onChange={handleBasicInfoChange}
-                fullWidth
-                size="small"
-                required
-              />
+              <FormControl fullWidth size="small" required>
+                <InputLabel>Categoria</InputLabel>
+                <Select
+                  name="category"
+                  label="Categoria"
+                  value={formData?.category || ''}
+                  onChange={handleBasicInfoChange}
+                >
+                  {categoryOptions.map((category) => (
+                    <MenuItem key={category} value={category}>
+                      {category}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid>
             <Grid size={{ xs: 12, sm: 8 }}>
               <TextField
@@ -216,6 +239,22 @@ const EditProductModal: React.FC<IEditProductModalProps> = ({
                   required
                 />
               </Box>
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData?.isComponent || false}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setFormData((prev) =>
+                        prev ? { ...prev, isComponent: e.target.checked } : null
+                      )
+                    }
+                  />
+                }
+                label="Este produto também é um componente"
+              />
             </Grid>
 
             <Grid size={{ xs: 12 }}>
