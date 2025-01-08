@@ -154,7 +154,10 @@ const AddProduct = () => {
     e.preventDefault();
     setLoading(true);
     try {
+      const currentDate = new Date();
       await api.post('/products', {
+        createdAt: currentDate,
+        updatedAt: currentDate,
         ...productData,
         components: components,
       });

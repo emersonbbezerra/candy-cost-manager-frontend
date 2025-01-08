@@ -41,25 +41,26 @@ const unitOptions = [
   { value: 'UND', label: 'und' },
 ];
 
-interface ExtendedProduct extends IProduct {
-  unitOfMeasure: string;
-}
-
 const EditProductModal: React.FC<IEditProductModalProps> = ({
   open,
   onClose,
   product,
   onSave,
-}) => {
-  const [formData, setFormData] = useState<ExtendedProduct | null>(null);
+}): JSX.Element => {
+  const [formData, setFormData] = useState<IProduct | null>(null);
   const [productComponents, setProductComponents] = useState<
     IProductComponent[]
   >([]);
 
   useEffect(() => {
     if (product) {
-      setFormData(product as ExtendedProduct);
-      setProductComponents(product.components);
+      setFormData(product);
+      // Preservar a unidade de medida existente ou definir G como padrão
+      const componentsWithUnit = product.components.map((comp) => ({
+        ...comp,
+        unitOfMeasure: comp.unitOfMeasure || 'G',
+      }));
+      setProductComponents(componentsWithUnit);
     }
   }, [product]);
 
@@ -69,22 +70,20 @@ const EditProductModal: React.FC<IEditProductModalProps> = ({
       | { target: { name: string; value: string } }
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) =>
-      prev
-        ? {
-            ...prev,
-            [name]: ['yield', 'salePrice'].includes(name)
-              ? Number(value)
-              : value,
-          }
-        : null
-    );
+    setFormData((prev: IProduct | null) => {
+      if (!prev) return null;
+
+      return {
+        ...prev,
+        [name]: ['yield', 'salePrice'].includes(name) ? Number(value) : value,
+      };
+    });
   };
 
   const handleComponentAdd = () => {
     setProductComponents([
       ...productComponents,
-      { componentId: '', componentName: '', quantity: 0 },
+      { componentId: '', componentName: '', quantity: 0, unitOfMeasure: 'G' },
     ]);
   };
 
@@ -113,11 +112,48 @@ const EditProductModal: React.FC<IEditProductModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData) {
-      const updatedProduct: IProduct = {
+      let updatedProduct: Partial<IProduct> = {};
+      // Compare and include only changed fields
+      if (product) {
+        if (formData.name !== product.name) {
+          updatedProduct.name = formData.name;
+        }
+        if (formData.description !== product.description) {
+          updatedProduct.description = formData.description;
+        }
+        if (formData.category !== product.category) {
+          updatedProduct.category = formData.category;
+        }
+        if (formData.yield !== product.yield) {
+          updatedProduct.yield = formData.yield;
+        }
+        if (formData.salePrice !== product.salePrice) {
+          updatedProduct.salePrice = formData.salePrice;
+        }
+        if (formData.isComponent !== product.isComponent) {
+          updatedProduct.isComponent = formData.isComponent;
+        }
+      }
+      updatedProduct = {
+        ...updatedProduct,
         ...formData,
-        components: productComponents,
+        yieldUnit: formData.yieldUnit?.toUpperCase() || 'G',
+        components: productComponents.map((comp) => {
+          const updatedComp: IProductComponent = {
+            componentId: comp.componentId,
+            componentName: comp.componentName,
+            quantity: comp.quantity,
+            unitOfMeasure: comp.unitOfMeasure || 'G',
+          };
+          return updatedComp;
+        }),
       };
-      onSave(updatedProduct);
+      const currentDate = new Date();
+      onSave({
+        ...updatedProduct,
+        updatedAt: currentDate,
+      } as IProduct);
+      return;
     }
   };
 
@@ -209,9 +245,9 @@ const EditProductModal: React.FC<IEditProductModalProps> = ({
                   <FormControl size="small" required sx={{ flex: 1 }}>
                     <InputLabel>Unidade</InputLabel>
                     <Select
-                      name="unitOfMeasure"
+                      name="yieldUnit"
                       label="Unidade"
-                      value={formData?.unitOfMeasure?.toUpperCase() || 'G'}
+                      value={formData?.yieldUnit?.toUpperCase() || 'G'}
                       onChange={handleBasicInfoChange}
                     >
                       {unitOptions.map((option) => (
@@ -247,7 +283,7 @@ const EditProductModal: React.FC<IEditProductModalProps> = ({
                   <Switch
                     checked={formData?.isComponent || false}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setFormData((prev) =>
+                      setFormData((prev: IProduct | null) =>
                         prev ? { ...prev, isComponent: e.target.checked } : null
                       )
                     }
@@ -274,15 +310,39 @@ const EditProductModal: React.FC<IEditProductModalProps> = ({
                     sx={{ flex: 2 }}
                     autoComplete="off"
                   />
-                  <TextField
-                    type="number"
-                    label="Quantidade"
-                    value={comp.quantity}
-                    onChange={(e) =>
-                      handleQuantityChange(index, Number(e.target.value))
-                    }
-                    size="small"
-                  />
+                  <Box sx={{ display: 'flex', gap: 1, flex: 1 }}>
+                    <TextField
+                      type="number"
+                      label="Quantidade"
+                      value={comp.quantity}
+                      onChange={(e) =>
+                        handleQuantityChange(index, Number(e.target.value))
+                      }
+                      size="small"
+                      sx={{ flex: 1 }}
+                    />
+                    <FormControl size="small" required sx={{ flex: 1 }}>
+                      <InputLabel>Unidade</InputLabel>
+                      <Select
+                        value={comp.unitOfMeasure?.toUpperCase() || 'G'}
+                        label="Unidade"
+                        onChange={(e) => {
+                          const updatedComponents = [...productComponents];
+                          updatedComponents[index] = {
+                            ...updatedComponents[index],
+                            unitOfMeasure: e.target.value,
+                          };
+                          setProductComponents(updatedComponents);
+                        }}
+                      >
+                        {unitOptions.map((option) => (
+                          <MenuItem key={option.value} value={option.value}>
+                            {option.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Box>
                   <IconButton
                     onClick={() => handleComponentRemove(index)}
                     color="error"

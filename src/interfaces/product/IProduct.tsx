@@ -2,6 +2,7 @@ export interface IProductComponent {
   componentId: string;
   componentName: string;
   quantity: number;
+  unitOfMeasure?: string;
 }
 
 export interface IProduct {

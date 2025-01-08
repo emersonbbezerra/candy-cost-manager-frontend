@@ -8,7 +8,7 @@ import {
   Typography,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import ComponentCard from '../components/ComponentCard';
 import ConfirmationModal from '../components/ConfirmationModal';
 import EditComponentModal from '../components/EditComponentModal';
@@ -41,7 +41,7 @@ const ListComponents: React.FC = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  const fetchComponents = async () => {
+  const fetchComponents = useCallback(async () => {
     setError(null);
     setLoading(true);
     try {
@@ -58,33 +58,28 @@ const ListComponents: React.FC = () => {
           limit: ITEMS_PER_PAGE,
         },
       });
-
-      console.log('Resposta da API:', response.data);
+  
       const { components: responseComponents, pagination } = response.data;
       if (responseComponents && Array.isArray(responseComponents)) {
-        console.log('Componentes recebidos:', responseComponents);
         setComponents(responseComponents);
         setTotalPages(pagination?.totalPages || 1);
       } else {
-        console.warn('Invalid response format:', response.data);
         setComponents([]);
         setTotalPages(1);
       }
     } catch (error) {
       console.error('Erro ao buscar componentes:', error);
-      setError(
-        'Erro ao carregar os componentes. Por favor, verifique se o servidor está rodando e tente novamente.'
-      );
+      setError('Erro ao carregar os componentes. Por favor, verifique se o servidor está rodando e tente novamente.');
       setComponents([]);
       setTotalPages(1);
     } finally {
       setLoading(false);
     }
-  };
-
+  }, [page]);
+  
   useEffect(() => {
     fetchComponents();
-  }, [page]);
+  }, [fetchComponents]);
 
   useEffect(() => {
     console.log('Estado components atualizado:', components);
@@ -242,5 +237,4 @@ const ListComponents: React.FC = () => {
     </Container>
   );
 };
-
 export default ListComponents;

@@ -23,7 +23,7 @@ const Layout: React.FC<LayoutProps> = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', margin: 0, padding: 0, overflow: 'hidden' }}>
       {isAuthenticated && location.pathname !== '/login' && (
         <AppBar position="static">
           <Toolbar>
@@ -56,6 +56,9 @@ const Layout: React.FC<LayoutProps> = () => {
           flexDirection: 'column',
           minHeight: isAuthenticated ? 'calc(100vh - 64px)' : '100vh',
           backgroundColor: '#f4f4f4',
+          margin: 0,
+          padding: 0,
+          overflow: 'auto',
         }}
       >
         <Outlet />
