@@ -1,6 +1,7 @@
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {
+  Autocomplete,
   Box,
   Button,
   FormControl,
@@ -19,6 +20,7 @@ import React, { useEffect, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 import { IEditProductModalProps } from '../interfaces/product/IEditProductModalProps';
 import { IProduct, IProductComponent } from '../interfaces/product/IProduct';
+import api from '../services/api';
 
 const categoryOptions = [
   'Cake Box',
@@ -51,6 +53,8 @@ const EditProductModal: React.FC<IEditProductModalProps> = ({
   const [productComponents, setProductComponents] = useState<
     IProductComponent[]
   >([]);
+  const [availableComponents, setAvailableComponents] = useState<IProduct[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     if (product) {
@@ -63,6 +67,26 @@ const EditProductModal: React.FC<IEditProductModalProps> = ({
       setProductComponents(componentsWithUnit);
     }
   }, [product]);
+
+  useEffect(() => {
+    const fetchComponentsBySearchTerm = async () => {
+      if (searchTerm) {
+        try {
+          const response = await api.get(`components/search?name=${searchTerm}`);
+          if (response.data && Array.isArray(response.data)) {
+            setAvailableComponents(response.data);
+          } else {
+            console.error('Resposta da API não é um array:', response.data);
+            setAvailableComponents([]);
+          }
+        } catch (error) {
+          console.error('Erro ao buscar componentes:', error);
+          setAvailableComponents([]);
+        }
+      }
+    };
+    fetchComponentsBySearchTerm();
+  }, [searchTerm]);
 
   const handleBasicInfoChange = (
     e:
@@ -91,14 +115,14 @@ const EditProductModal: React.FC<IEditProductModalProps> = ({
     setProductComponents((prev) => prev.filter((_, idx) => idx !== index));
   };
 
-  const handleComponentNameChange = (index: number, newName: string) => {
-    const updatedComponents = [...productComponents];
-    updatedComponents[index] = {
-      ...updatedComponents[index],
-      componentName: newName,
-    };
-    setProductComponents(updatedComponents);
-  };
+  // const handleComponentNameChange = (index: number, newName: string) => {
+  //   const updatedComponents = [...productComponents];
+  //   updatedComponents[index] = {
+  //     ...updatedComponents[index],
+  //     componentName: newName,
+  //   };
+  //   setProductComponents(updatedComponents);
+  // };
 
   const handleQuantityChange = (index: number, quantity: number) => {
     const updatedComponents = [...productComponents];
@@ -299,18 +323,28 @@ const EditProductModal: React.FC<IEditProductModalProps> = ({
               </Typography>
 
               {productComponents.map((comp, index) => (
-                <Box key={index} sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                  <TextField
-                    label="Componente"
-                    value={comp.componentName}
-                    onChange={(e) =>
-                      handleComponentNameChange(index, e.target.value)
-                    }
-                    size="small"
-                    sx={{ flex: 2 }}
-                    autoComplete="off"
+                <Box key={index} sx={{ display: 'flex', gap: 2, mb: 2, width: '100%' }}>
+                  <Autocomplete
+                    options={availableComponents}
+                    getOptionLabel={(option) => option.name}
+                    value={availableComponents.find((c) => c.name === comp.componentName) || null}
+                    onChange={(_, newValue) => {
+                      const updatedComponents = [...productComponents];
+                      updatedComponents[index] = {
+                        ...updatedComponents[index],
+                        componentName: newValue ? newValue.name : '',
+                      };
+                      setProductComponents(updatedComponents);
+                    }}
+                    onInputChange={(_, newInputValue) => {
+                      setSearchTerm(newInputValue);
+                    }}
+                    renderInput={(params) => (
+                      <TextField {...params} label="Componente" size="small" sx={{ flex: 6 }} />
+                    )}
+                    sx={{ flex: 6 }}
                   />
-                  <Box sx={{ display: 'flex', gap: 1, flex: 1 }}>
+                  <Box sx={{ display: 'flex', gap: 1, flex: 5 }}>
                     <TextField
                       type="number"
                       label="Quantidade"
@@ -319,9 +353,9 @@ const EditProductModal: React.FC<IEditProductModalProps> = ({
                         handleQuantityChange(index, Number(e.target.value))
                       }
                       size="small"
-                      sx={{ flex: 1 }}
+                      sx={{ flex: 3 }}
                     />
-                    <FormControl size="small" required sx={{ flex: 1 }}>
+                    <FormControl size="small" required sx={{ flex: 2 }}>
                       <InputLabel>Unidade</InputLabel>
                       <Select
                         value={comp.unitOfMeasure?.toUpperCase() || 'G'}
@@ -347,6 +381,7 @@ const EditProductModal: React.FC<IEditProductModalProps> = ({
                     onClick={() => handleComponentRemove(index)}
                     color="error"
                     size="small"
+                    sx={{ flex: 1 }}
                   >
                     <DeleteIcon />
                   </IconButton>
