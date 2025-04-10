@@ -1,13 +1,21 @@
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
+import { IProduct } from '../interfaces/product/IProduct';
 
+// Definir interface estendida
+interface ExtendedAxiosInstance extends AxiosInstance {
+  fetchAvailableComponents: () => Promise<IProduct[]>;
+}
+
+// Criar instância axios com type assertion
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
-});
+}) as ExtendedAxiosInstance;
 
+// Configurar interceptors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -36,13 +44,14 @@ api.interceptors.response.use(
   }
 );
 
-export const fetchAvailableComponents = async () => {
+// Adicionar método customizado
+api.fetchAvailableComponents = async (): Promise<IProduct[]> => {
   try {
-    const response = await api.get('/components?limit=1000'); // Ajuste conforme necessário
+    const response = await api.get('/components?limit=1000');
     return response.data;
   } catch (error) {
     console.error('Erro ao buscar componentes disponíveis:', error);
-    throw error; // Re-throw para que o chamador possa lidar com isso
+    throw error;
   }
 };
 
