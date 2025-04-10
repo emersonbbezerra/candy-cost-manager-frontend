@@ -3,6 +3,7 @@ export interface IProductCardProps {
   name: string;
   category: string;
   yield: number;
+  unitOfMeasure: string;
   isComponent: boolean;
   productionCost: number;
   productionCostRatio: number;

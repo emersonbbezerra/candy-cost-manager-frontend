@@ -9,6 +9,7 @@ const ProductCard: React.FC<IProductCardProps> = ({
   name,
   category,
   yield: productYield,
+  unitOfMeasure,
   isComponent,
   productionCost,
   productionCostRatio,
@@ -34,7 +35,7 @@ const ProductCard: React.FC<IProductCardProps> = ({
         </Typography>
         <Typography color="text.secondary">Categoria: {category}</Typography>
         <Typography color="text.secondary">
-          Rendimento: {productYield}
+          Rendimento: {productYield} {unitOfMeasure || ''}
         </Typography>
         <Typography color="text.secondary">
           Custo de Produção: R$ {productionCost.toFixed(2)}

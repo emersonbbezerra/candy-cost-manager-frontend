@@ -59,6 +59,9 @@ const ListProducts: React.FC = () => {
       const { products: responseProducts, pagination } = response.data;
       if (responseProducts && Array.isArray(responseProducts)) {
         console.log('Produtos recebidos:', responseProducts);
+        responseProducts.forEach(product => {
+          console.log(`Produto ID: ${product.id}, Unidade de Medida: ${product.unitOfMeasure}`);
+        });
         setProducts(responseProducts);
         setTotalPages(pagination?.totalPages || 1);
       } else {
@@ -86,6 +89,16 @@ const ListProducts: React.FC = () => {
     console.log('Estado products atualizado:', products);
   }, [products]);
 
+  const fetchProductById = async (id: string) => {
+    try {
+      const response = await api.get<IProduct>(`/products/${id}`);
+      setProductToEdit(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar produto:', error);
+      setError('Erro ao carregar os dados do produto.');
+    }
+  };
+
   const handleSaveEdit = async (data: IProduct) => {
     if (productToEdit) {
       try {
@@ -109,6 +122,7 @@ const ListProducts: React.FC = () => {
       }
     }
   };
+
   const handleDelete = (id: string) => {
     const product = products.find((prod) => prod.id === id);
     if (product) {
@@ -178,10 +192,12 @@ const ListProducts: React.FC = () => {
                     isComponent={product.isComponent}
                     productionCost={product.productionCost}
                     productionCostRatio={product.productionCostRatio}
+                    unitOfMeasure={product.unitOfMeasure}
                     onEdit={() => {
                       console.log('Produto sendo editado:', product);
                       setProductToEdit(product);
                       setEditModalOpen(true);
+                      fetchProductById(product.id); // Fetch product by ID
                     }}
                     onDelete={handleDelete}
                   />
