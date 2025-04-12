@@ -115,15 +115,6 @@ const EditProductModal: React.FC<IEditProductModalProps> = ({
     setProductComponents((prev) => prev.filter((_, idx) => idx !== index));
   };
 
-  // const handleComponentNameChange = (index: number, newName: string) => {
-  //   const updatedComponents = [...productComponents];
-  //   updatedComponents[index] = {
-  //     ...updatedComponents[index],
-  //     componentName: newName,
-  //   };
-  //   setProductComponents(updatedComponents);
-  // };
-
   const handleQuantityChange = (index: number, quantity: number) => {
     const updatedComponents = [...productComponents];
     updatedComponents[index] = {
@@ -161,7 +152,7 @@ const EditProductModal: React.FC<IEditProductModalProps> = ({
       updatedProduct = {
         ...updatedProduct,
         ...formData,
-        yieldUnit: formData.yieldUnit?.toUpperCase() || 'G',
+        unitOfMeasure: formData.unitOfMeasure?.toUpperCase() || 'G',
         components: productComponents.map((comp) => {
           const updatedComp: IProductComponent = {
             componentId: comp.componentId,
@@ -271,7 +262,7 @@ const EditProductModal: React.FC<IEditProductModalProps> = ({
                     <Select
                       name="yieldUnit"
                       label="Unidade"
-                      value={formData?.yieldUnit?.toUpperCase() || 'G'}
+                      value={formData?.unitOfMeasure?.toUpperCase() || 'G'}
                       onChange={handleBasicInfoChange}
                     >
                       {unitOptions.map((option) => (
