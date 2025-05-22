@@ -1,255 +1,115 @@
-import {
-  Alert,
-  Box,
-  CircularProgress,
-  Container,
-  Pagination,
-  Snackbar,
-  Typography,
-} from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import ConfirmationModal from '../components/ConfirmationModal';
-import { default as EditProductModal } from '../components/EditProductModal';
-import ProductCard from '../components/ProductCard';
+import EditProductModal from '../components/EditProductModal';
 import { IProduct } from '../interfaces/product/IProduct';
 import api from '../services/api';
 
+const getId = (product: any) => product._id ?? product.id;
+
 const ListProducts: React.FC = () => {
   const [products, setProducts] = useState<IProduct[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<IProduct | null>(null);
-  const [productToEdit, setProductToEdit] = useState<IProduct | null>(null);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success' as 'success' | 'error',
-  });
-
-  const ITEMS_PER_PAGE = 12;
-
-  const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
-  };
-
-  const fetchProducts = async () => {
-    setError(null);
-    setLoading(true);
-    try {
-      const response = await api.get<{
-        products: IProduct[];
-        pagination: {
-          total: number;
-          totalPages: number;
-          currentPage: number;
-        };
-      }>('/products', {
-        params: {
-          page,
-          limit: ITEMS_PER_PAGE,
-        },
-      });
-
-      console.log('Resposta da API:', response.data);
-      const { products: responseProducts, pagination } = response.data;
-      if (responseProducts && Array.isArray(responseProducts)) {
-        console.log('Produtos recebidos:', responseProducts);
-        responseProducts.forEach(product => {
-          console.log(`Produto ID: ${product.id}, Unidade de Medida: ${product.unitOfMeasure}`);
-        });
-        setProducts(responseProducts);
-        setTotalPages(pagination?.totalPages || 1);
-      } else {
-        console.warn('Invalid response format:', response.data);
-        setProducts([]);
-        setTotalPages(1);
-      }
-    } catch (error) {
-      console.error('Erro ao buscar produtos:', error);
-      setError(
-        'Erro ao carregar os produtos. Por favor, verifique se o servidor está rodando e tente novamente.'
-      );
-      setProducts([]);
-      setTotalPages(1);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     fetchProducts();
-  }, [page]);
+  }, []);
 
-  useEffect(() => {
-    console.log('Estado products atualizado:', products);
-  }, [products]);
-
-  const fetchProductById = async (id: string) => {
+  const fetchProducts = async () => {
     try {
-      const response = await api.get<IProduct>(`/products/${id}`);
-      setProductToEdit(response.data);
+      const response = await api.get('/products');
+      setProducts(response.data.products);
     } catch (error) {
-      console.error('Erro ao buscar produto:', error);
-      setError('Erro ao carregar os dados do produto.');
+      console.error('Erro ao buscar produtos', error);
     }
   };
 
-  const handleSaveEdit = async (data: IProduct) => {
-    if (productToEdit) {
-      try {
-        await api.put(`/products/${productToEdit.id}`, data);
-        setSnackbar({
-          open: true,
-          message: 'Produto atualizado com sucesso!',
-          severity: 'success',
-        });
-        fetchProducts();
-      } catch (error) {
-        console.error('Erro ao atualizar produto:', error);
-        setSnackbar({
-          open: true,
-          message: 'Erro ao atualizar o produto. Por favor, tente novamente.',
-          severity: 'error',
-        });
-      } finally {
-        setEditModalOpen(false);
-        setProductToEdit(null);
-      }
-    }
+  const handleEditClick = (product: IProduct) => {
+    console.log('Componentes desse produto:', product.components);
+    setSelectedProduct(product);
+    setEditModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    const product = products.find((prod) => prod.id === id);
-    if (product) {
-      setProductToDelete(product);
-      setDeleteModalOpen(true);
-    }
+  const handleDeleteClick = (product: IProduct) => {
+    setProductToDelete(product);
+    setDeleteDialogOpen(true);
   };
 
-  const confirmDelete = async () => {
+  const handleDeleteConfirm = async () => {
     if (productToDelete) {
       try {
-        await api.delete(`/products/${productToDelete.id}`);
-        setSnackbar({
-          open: true,
-          message: 'Produto excluído com sucesso!',
-          severity: 'success',
-        });
+        await api.delete(`/products/${getId(productToDelete)}`);
+        setDeleteDialogOpen(false);
+        setProductToDelete(null);
         fetchProducts();
       } catch (error) {
-        console.error('Erro ao deletar produto:', error);
-        setSnackbar({
-          open: true,
-          message: 'Erro ao deletar o produto. Por favor, tente novamente.',
-          severity: 'error',
-        });
-      } finally {
-        setDeleteModalOpen(false);
-        setProductToDelete(null);
+        console.error('Erro ao deletar produto', error);
       }
     }
   };
 
-  const handlePageChange = (
-    event: React.ChangeEvent<unknown>,
-    value: number
-  ) => {
-    setPage(value);
+  const handleSave = () => {
+    setEditModalOpen(false);
+    setSelectedProduct(null);
+    fetchProducts();
   };
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Lista de Produtos
-      </Typography>
+    <div>
+      <Typography variant="h4" gutterBottom>Lista de Produtos</Typography>
+      <Grid container spacing={2}>
+        {products.map((product) => (
+          <Grid item xs={12} sm={6} md={4} key={getId(product)}>
+            <div style={{ border: '1px solid #ccc', padding: 16, borderRadius: 8 }}>
+              <Typography variant="h6">{product.name}</Typography>
+              <Typography variant="body2">Categoria: {product.category}</Typography>
+              <Typography variant="body2">Rendimento: {product.yield} {product.unitOfMeasure}</Typography>
+              <Typography variant="body2">Custo Total de Produção: R$ {product.productionCost?.toFixed(2) ?? '0.00'}</Typography>
+              <Typography variant="body2">Taxa de Custo de Produção: R${product.productionCostRatio?.toFixed(4) ?? '0.0000'}/{product.unitOfMeasure}</Typography>
+              <Typography variant="body2">Preço de Venda: R$ {product.salePrice.toFixed(2)}</Typography>
+              <div style={{ marginTop: 8 }}>
+                <IconButton color="primary" onClick={() => handleEditClick(product)}>
+                  <EditIcon />
+                </IconButton>
+                <IconButton color="error" onClick={() => handleDeleteClick(product)}>
+                  <DeleteIcon />
+                </IconButton>
+              </div>
+            </div>
+          </Grid>
+        ))}
+      </Grid>
 
-      {error && (
-        <Typography color="error" sx={{ mb: 2 }}>
-          {error}
-        </Typography>
-      )}
-
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <>
-          <Box sx={{ flexGrow: 1, mb: 4 }}>
-            <Grid container spacing={3}>
-              {products.map((product) => (
-                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={product.id}>
-                  <ProductCard
-                    id={product.id}
-                    name={product.name}
-                    category={product.category}
-                    yield={product.yield}
-                    isComponent={product.isComponent}
-                    productionCost={product.productionCost}
-                    productionCostRatio={product.productionCostRatio}
-                    unitOfMeasure={product.unitOfMeasure}
-                    onEdit={() => {
-                      console.log('Produto sendo editado:', product);
-                      setProductToEdit(product);
-                      setEditModalOpen(true);
-                      fetchProductById(product.id); // Fetch product by ID
-                    }}
-                    onDelete={handleDelete}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-
-          {products.length > 0 && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-              <Pagination
-                count={totalPages}
-                page={page}
-                onChange={handlePageChange}
-                color="primary"
-                size="large"
-              />
-            </Box>
-          )}
-        </>
-      )}
-
-      <ConfirmationModal
-        open={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        onConfirm={confirmDelete}
-        message={`Você tem certeza que deseja excluir o produto "${productToDelete?.name}"?`}
-      />
-
-      {productToEdit && (
+      {/* Modal de edição */}
+      {selectedProduct && (
         <EditProductModal
           open={editModalOpen}
-          onClose={() => {
-            setEditModalOpen(false);
-            setProductToEdit(null);
+          onClose={() => setEditModalOpen(false)}
+          product={{
+            ...selectedProduct,
+            components: selectedProduct.components.map((c) => ({
+              ...c,
+              unitOfMeasure: c.unitOfMeasure || '',
+            })),
           }}
-          onSave={handleSaveEdit}
-          product={productToEdit}
+          onSave={handleSave}
         />
       )}
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Container>
+      {/* Diálogo de confirmação de exclusão */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>Confirmação</DialogTitle>
+        <DialogContent>Tem certeza que deseja excluir este produto?</DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancelar</Button>
+          <Button color="error" onClick={handleDeleteConfirm}>Excluir</Button>
+        </DialogActions>
+      </Dialog>
+    </div>
   );
 };
 

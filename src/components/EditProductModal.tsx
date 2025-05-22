@@ -1,408 +1,259 @@
-import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {
-  Autocomplete,
-  Box,
-  Button,
-  FormControl,
-  FormControlLabel,
-  IconButton,
-  InputLabel,
-  MenuItem,
-  Modal,
-  Select,
-  Switch,
-  TextField,
-  Typography,
+    Alert,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Grid,
+    IconButton,
+    Snackbar,
+    TextField,
+    Typography,
 } from '@mui/material';
-import Grid from '@mui/material/Grid2';
 import React, { useEffect, useState } from 'react';
-import { NumericFormat } from 'react-number-format';
-import { IEditProductModalProps } from '../interfaces/product/IEditProductModalProps';
-import { IProduct, IProductComponent } from '../interfaces/product/IProduct';
 import api from '../services/api';
 
-const categoryOptions = [
-  'Cake Box',
-  'Caseirinhos',
-  'Chocotones',
-  'Coberturas',
-  'Diversos',
-  'Massas',
-  'Ovos Trufados',
-  'Recheios',
-  'Sobremesas',
-  'Tortas Tradicionais',
-  'Tortas Especiais',
-  'TortasNoffee',
-];
+interface ComponentData {
+    componentId: string;
+    componentName: string;
+    quantity: number;
+    unitOfMeasure: string | undefined;
+}
 
-const unitOptions = [
-  { value: 'G', label: 'g' },
-  { value: 'ML', label: 'mL' },
-  { value: 'UND', label: 'und' },
-];
+interface ProductData {
+    id: string;
+    _id?: string;
+    name: string;
+    description: string;
+    category: string;
+    components: ComponentData[];
+    yield: number;
+    unitOfMeasure: string;
+    salePrice: number;
+    productionCost?: number;
+    productionCostRatio?: number;
+}
 
-const EditProductModal: React.FC<IEditProductModalProps> = ({
-  open,
-  onClose,
-  product,
-  onSave,
-}): JSX.Element => {
-  const [formData, setFormData] = useState<IProduct | null>(null);
-  const [productComponents, setProductComponents] = useState<
-    IProductComponent[]
-  >([]);
-  const [availableComponents, setAvailableComponents] = useState<IProduct[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+interface EditProductModalProps {
+    open: boolean;
+    onClose: () => void;
+    product: ProductData;
+    onSave: (updatedProduct: ProductData) => void;
+}
 
-  useEffect(() => {
-    if (product) {
-      setFormData(product);
-      // Preservar a unidade de medida existente ou definir G como padrão
-      const componentsWithUnit = product.components.map((comp) => ({
-        ...comp,
-        unitOfMeasure: comp.unitOfMeasure || 'G',
-      }));
-      setProductComponents(componentsWithUnit);
-    }
-  }, [product]);
+const emptyComponent: ComponentData = {
+    componentId: '',
+    componentName: '',
+    quantity: 0,
+    unitOfMeasure: '',
+};
 
-  useEffect(() => {
-    const fetchComponentsBySearchTerm = async () => {
-      if (searchTerm) {
+const EditProductModal: React.FC<EditProductModalProps> = ({ open, onClose, product, onSave }) => {
+    const [formState, setFormState] = useState<ProductData>({ ...product });
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [showError, setShowError] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
+
+    useEffect(() => {
+        setFormState({ ...product });
+    }, [product]);
+
+    const handleInputChange = (field: keyof ProductData, value: any) => {
+        setFormState((prev) => ({ ...prev, [field]: value }));
+    };
+
+    const handleComponentChange = (index: number, field: keyof ComponentData, value: any) => {
+        setFormState((prev) => {
+            const updatedComponents = prev.components.map((comp, i) =>
+                i === index ? { ...comp, [field]: value } : comp
+            );
+            return { ...prev, components: updatedComponents };
+        });
+    };
+
+    const handleRemoveComponent = (index: number) => {
+        const updated = formState.components.filter((_, i) => i !== index);
+        setFormState((prev) => ({ ...prev, components: updated }));
+    };
+
+    const handleAddComponent = () => {
+        setFormState((prev) => ({
+            ...prev,
+            components: [...prev.components, { ...emptyComponent }],
+        }));
+    };
+
+    const handleSubmit = async () => {
         try {
-          const response = await api.get(`components/search?name=${searchTerm}`);
-          if (response.data && Array.isArray(response.data)) {
-            setAvailableComponents(response.data);
-          } else {
-            console.error('Resposta da API não é um array:', response.data);
-            setAvailableComponents([]);
-          }
-        } catch (error) {
-          console.error('Erro ao buscar componentes:', error);
-          setAvailableComponents([]);
+            const productId = formState._id || formState.id;
+            if (!productId) {
+                setErrorMessage('ID do produto não encontrado.');
+                setShowError(true);
+                return;
+            }
+            // <<<< SOLUÇÃO: Normalize antes do PUT!
+            const updateBody = { ...formState };
+            updateBody.components = updateBody.components.map((c, index) => {
+                const originalComponent = product.components[index];
+                return {
+                    ...c,
+                    unitOfMeasure:
+                        c.unitOfMeasure && c.unitOfMeasure.trim() !== ''
+                            ? c.unitOfMeasure
+                            : originalComponent?.unitOfMeasure ?? '',
+                };
+            });
+
+            if ('_id' in updateBody) delete (updateBody as any)._id;
+            if ('id' in updateBody) delete (updateBody as any).id;
+
+            console.log('updateBody enviado:', updateBody); // Verifique aqui!
+
+            const response = await api.put(`/products/${productId}`, updateBody);
+            setShowSuccess(true);
+            onSave(response.data.product);
+        } catch (error: any) {
+            setErrorMessage(error.response?.data?.message || 'Erro ao atualizar produto.');
+            setShowError(true);
         }
-      }
     };
-    fetchComponentsBySearchTerm();
-  }, [searchTerm]);
 
-  const handleBasicInfoChange = (
-    e:
-      | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-      | { target: { name: string; value: string } }
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev: IProduct | null) => {
-      if (!prev) return null;
-
-      return {
-        ...prev,
-        [name]: ['yield', 'salePrice'].includes(name) ? Number(value) : value,
-      };
-    });
-  };
-
-  const handleComponentAdd = () => {
-    setProductComponents([
-      ...productComponents,
-      { componentId: '', componentName: '', quantity: 0, unitOfMeasure: 'G' },
-    ]);
-  };
-
-  const handleComponentRemove = (index: number) => {
-    setProductComponents((prev) => prev.filter((_, idx) => idx !== index));
-  };
-
-  const handleQuantityChange = (index: number, quantity: number) => {
-    const updatedComponents = [...productComponents];
-    updatedComponents[index] = {
-      ...updatedComponents[index],
-      quantity,
+    const handleClose = () => {
+        setShowError(false);
+        setShowSuccess(false);
+        onClose();
     };
-    setProductComponents(updatedComponents);
-  };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData) {
-      let updatedProduct: Partial<IProduct> = {};
-      // Compare and include only changed fields
-      if (product) {
-        if (formData.name !== product.name) {
-          updatedProduct.name = formData.name;
-        }
-        if (formData.description !== product.description) {
-          updatedProduct.description = formData.description;
-        }
-        if (formData.category !== product.category) {
-          updatedProduct.category = formData.category;
-        }
-        if (formData.yield !== product.yield) {
-          updatedProduct.yield = formData.yield;
-        }
-        if (formData.salePrice !== product.salePrice) {
-          updatedProduct.salePrice = formData.salePrice;
-        }
-        if (formData.isComponent !== product.isComponent) {
-          updatedProduct.isComponent = formData.isComponent;
-        }
-      }
-      updatedProduct = {
-        ...updatedProduct,
-        ...formData,
-        unitOfMeasure: formData.unitOfMeasure?.toUpperCase() || 'G',
-        components: productComponents.map((comp) => {
-          const updatedComp: IProductComponent = {
-            componentId: comp.componentId,
-            componentName: comp.componentName,
-            quantity: comp.quantity,
-            unitOfMeasure: comp.unitOfMeasure || 'G',
-          };
-          return updatedComp;
-        }),
-      };
-      const currentDate = new Date();
-      onSave({
-        ...updatedProduct,
-        updatedAt: currentDate,
-      } as IProduct);
-      return;
-    }
-  };
+    return (
+        <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+            <DialogTitle>Editar Produto</DialogTitle>
+            <DialogContent>
+                <Grid container spacing={3} sx={{ mt: 1 }}>
+                    <Grid item xs={12} sm={6} md={4}>
+                        <TextField
+                            label="Nome"
+                            value={formState.name}
+                            onChange={(e) => handleInputChange('name', e.target.value)}
+                            fullWidth
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={4}>
+                        <TextField
+                            label="Categoria"
+                            value={formState.category}
+                            onChange={(e) => handleInputChange('category', e.target.value)}
+                            fullWidth
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={4}>
+                        <TextField
+                            label="Rendimento"
+                            type="number"
+                            value={formState.yield}
+                            onChange={(e) => handleInputChange('yield', Number(e.target.value))}
+                            fullWidth
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={4}>
+                        <TextField
+                            label="Unidade de Medida"
+                            value={formState.unitOfMeasure}
+                            onChange={(e) => handleInputChange('unitOfMeasure', e.target.value)}
+                            fullWidth
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={4}>
+                        <TextField
+                            label="Preço de Venda"
+                            type="number"
+                            value={formState.salePrice}
+                            onChange={(e) => handleInputChange('salePrice', Number(e.target.value))}
+                            fullWidth
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={4} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <Typography variant="body1" sx={{ mt: 2 }}>
+                            Custo Total de Produção: R$ {formState.productionCost?.toFixed(2) ?? '0.00'}
+                        </Typography>
+                        <Typography variant="body1" sx={{ mt: 1 }}>
+                            Taxa de Custo de Produção: R${formState.productionCostRatio?.toFixed(4) ?? '0.0000'}/{formState.unitOfMeasure}
+                        </Typography>
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            label="Descrição"
+                            value={formState.description}
+                            onChange={(e) => handleInputChange('description', e.target.value)}
+                            fullWidth
+                            multiline
+                            minRows={2}
+                        />
+                    </Grid>
+                </Grid>
 
-  return (
-    <Modal open={open} onClose={onClose}>
-      <Box
-        sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: { xs: '90%', sm: 800 },
-          maxHeight: '90vh',
-          bgcolor: 'background.paper',
-          boxShadow: 24,
-          p: 3,
-          borderRadius: 2,
-          display: 'flex',
-          flexDirection: 'column',
-          overflowY: 'auto',
-        }}
-      >
-        <IconButton
-          onClick={onClose}
-          sx={{ position: 'absolute', right: 8, top: 8 }}
-        >
-          <CloseIcon />
-        </IconButton>
-
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          Editar Produto
-        </Typography>
-
-        <form onSubmit={handleSubmit}>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 8 }}>
-              <TextField
-                name="name"
-                label="Nome do Produto"
-                value={formData?.name || ''}
-                onChange={handleBasicInfoChange}
-                fullWidth
-                size="small"
-                required
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 4 }}>
-              <FormControl fullWidth size="small" required>
-                <InputLabel>Categoria</InputLabel>
-                <Select
-                  name="category"
-                  label="Categoria"
-                  value={formData?.category || ''}
-                  onChange={handleBasicInfoChange}
+                <Typography variant="h6" sx={{ mt: 3 }}>Componentes do Produto</Typography>
+                <Grid container spacing={2} sx={{ mt: 1 }}>
+                    {formState.components.map((component, idx) => (
+                        <React.Fragment key={idx}>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    label="Nome do Componente"
+                                    value={component.componentName}
+                                    onChange={(e) => handleComponentChange(idx, 'componentName', e.target.value)}
+                                    fullWidth
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={3}>
+                                <TextField
+                                    label="Quantidade"
+                                    type="number"
+                                    value={component.quantity}
+                                    onChange={(e) => handleComponentChange(idx, 'quantity', Number(e.target.value))}
+                                    fullWidth
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={2}>
+                                <TextField
+                                    label="Unidade"
+                                    value={component.unitOfMeasure}
+                                    onChange={(e) => handleComponentChange(idx, 'unitOfMeasure', e.target.value)}
+                                    fullWidth
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={1} sx={{ display: 'flex', alignItems: 'center' }}>
+                                <IconButton color="error" onClick={() => handleRemoveComponent(idx)}>
+                                    <DeleteIcon />
+                                </IconButton>
+                            </Grid>
+                        </React.Fragment>
+                    ))}
+                </Grid>
+                <Button
+                    variant="outlined"
+                    color="primary"
+                    onClick={handleAddComponent}
+                    sx={{ mt: 2 }}
                 >
-                  {categoryOptions.map((category) => (
-                    <MenuItem key={category} value={category}>
-                      {category}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 8 }}>
-              <TextField
-                name="description"
-                label="Descrição"
-                value={formData?.description || ''}
-                onChange={handleBasicInfoChange}
-                fullWidth
-                multiline
-                rows={3}
-                required
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 4 }}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <TextField
-                    name="yield"
-                    label="Rendimento"
-                    type="number"
-                    value={formData?.yield || ''}
-                    onChange={handleBasicInfoChange}
-                    size="small"
-                    required
-                    sx={{ flex: 1 }}
-                  />
-                  <FormControl size="small" required sx={{ flex: 1 }}>
-                    <InputLabel>Unidade</InputLabel>
-                    <Select
-                      name="yieldUnit"
-                      label="Unidade"
-                      value={formData?.unitOfMeasure?.toUpperCase() || 'G'}
-                      onChange={handleBasicInfoChange}
-                    >
-                      {unitOptions.map((option) => (
-                        <MenuItem key={option.value} value={option.value}>
-                          {option.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Box>
-                <NumericFormat
-                  name="salePrice"
-                  label="Preço de Venda"
-                  value={formData?.salePrice || '0'}
-                  onChange={handleBasicInfoChange}
-                  thousandSeparator="."
-                  decimalSeparator=","
-                  prefix="R$ "
-                  decimalScale={2}
-                  fixedDecimalScale
-                  allowNegative={false}
-                  customInput={TextField}
-                  fullWidth
-                  size="small"
-                  required
-                />
-              </Box>
-            </Grid>
+                    Adicionar Componente
+                </Button>
 
-            <Grid size={{ xs: 12 }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formData?.isComponent || false}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setFormData((prev: IProduct | null) =>
-                        prev ? { ...prev, isComponent: e.target.checked } : null
-                      )
-                    }
-                  />
-                }
-                label="Este produto também é um componente"
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
-                Componentes do Produto
-              </Typography>
-
-              {productComponents.map((comp, index) => (
-                <Box key={index} sx={{ display: 'flex', gap: 2, mb: 2, width: '100%' }}>
-                  <Autocomplete
-                    options={availableComponents}
-                    getOptionLabel={(option) => option.name}
-                    value={availableComponents.find((c) => c.name === comp.componentName) || null}
-                    onChange={(_, newValue) => {
-                      const updatedComponents = [...productComponents];
-                      updatedComponents[index] = {
-                        ...updatedComponents[index],
-                        componentName: newValue ? newValue.name : '',
-                      };
-                      setProductComponents(updatedComponents);
-                    }}
-                    onInputChange={(_, newInputValue) => {
-                      setSearchTerm(newInputValue);
-                    }}
-                    renderInput={(params) => (
-                      <TextField {...params} label="Componente" size="small" sx={{ flex: 6 }} />
-                    )}
-                    sx={{ flex: 6 }}
-                  />
-                  <Box sx={{ display: 'flex', gap: 1, flex: 5 }}>
-                    <TextField
-                      type="number"
-                      label="Quantidade"
-                      value={comp.quantity}
-                      onChange={(e) =>
-                        handleQuantityChange(index, Number(e.target.value))
-                      }
-                      size="small"
-                      sx={{ flex: 3 }}
-                    />
-                    <FormControl size="small" required sx={{ flex: 2 }}>
-                      <InputLabel>Unidade</InputLabel>
-                      <Select
-                        value={comp.unitOfMeasure?.toUpperCase() || 'G'}
-                        label="Unidade"
-                        onChange={(e) => {
-                          const updatedComponents = [...productComponents];
-                          updatedComponents[index] = {
-                            ...updatedComponents[index],
-                            unitOfMeasure: e.target.value,
-                          };
-                          setProductComponents(updatedComponents);
-                        }}
-                      >
-                        {unitOptions.map((option) => (
-                          <MenuItem key={option.value} value={option.value}>
-                            {option.label}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Box>
-                  <IconButton
-                    onClick={() => handleComponentRemove(index)}
-                    color="error"
-                    size="small"
-                    sx={{ flex: 1 }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              ))}
-
-              <Button
-                variant="outlined"
-                onClick={handleComponentAdd}
-                sx={{ mt: 1 }}
-              >
-                Adicionar Componente
-              </Button>
-            </Grid>
-          </Grid>
-
-          <Box
-            sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, gap: 2 }}
-          >
-            <Button variant="outlined" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button type="submit" variant="contained">
-              Salvar
-            </Button>
-          </Box>
-        </form>
-      </Box>
-    </Modal>
-  );
+                <Snackbar open={showSuccess} autoHideDuration={2000} onClose={() => setShowSuccess(false)}>
+                    <Alert severity="success">Produto atualizado com sucesso!</Alert>
+                </Snackbar>
+                <Snackbar open={showError} autoHideDuration={3000} onClose={() => setShowError(false)}>
+                    <Alert severity="error">{errorMessage}</Alert>
+                </Snackbar>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={handleClose}>Cancelar</Button>
+                <Button onClick={handleSubmit} variant="contained" color="primary">
+                    Salvar
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
 };
 
 export default EditProductModal;
