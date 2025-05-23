@@ -7,7 +7,7 @@ import {
   PieChart,
   ShoppingBag,
 } from '@mui/icons-material';
-import { Box, Button, Container, Paper, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, Container, Paper, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -24,7 +24,11 @@ const Dashboard = () => {
   }, [loading, isAuthenticated, navigate, user]);
 
   if (loading) {
-    return <div>Carregando...</div>;
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
   if (!isAuthenticated) {
