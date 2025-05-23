@@ -5,6 +5,7 @@ import {
   Container,
   Pagination,
   Snackbar,
+  TextField,
   Typography,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
@@ -18,10 +19,14 @@ import api from '../services/api';
 
 const ListComponents: React.FC = () => {
   const [components, setComponents] = useState<IComponentCard[]>([]);
+  const [allCategories, setAllCategories] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [filteredPage, setFilteredPage] = useState(1);
+  const [filteredTotalPages, setFilteredTotalPages] = useState(1);
+
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [componentToDelete, setComponentToDelete] =
@@ -34,6 +39,8 @@ const ListComponents: React.FC = () => {
     message: '',
     severity: 'success' as 'success' | 'error',
   });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('');
 
   const ITEMS_PER_PAGE = 12;
 
@@ -45,45 +52,123 @@ const ListComponents: React.FC = () => {
     setError(null);
     setLoading(true);
     try {
-      const response = await api.get<{
-        components: IComponentCard[];
-        pagination: {
-          total: number;
-          totalPages: number;
-          currentPage: number;
-        };
-      }>('/components', {
-        params: {
-          page,
-          limit: ITEMS_PER_PAGE,
-        },
-      });
-  
-      const { components: responseComponents, pagination } = response.data;
-      if (responseComponents && Array.isArray(responseComponents)) {
-        setComponents(responseComponents);
-        setTotalPages(pagination?.totalPages || 1);
+      if (categoryFilter) {
+        // Fetch filtered components with independent pagination
+        const response = await api.get<{
+          components: IComponentCard[];
+          pagination: {
+            total: number;
+            totalPages: number;
+            currentPage: number;
+          };
+        }>('/components', {
+          params: {
+            page: filteredPage,
+            limit: ITEMS_PER_PAGE,
+            category: categoryFilter,
+          },
+        });
+
+        const { components: responseComponents, pagination } = response.data;
+        if (responseComponents && Array.isArray(responseComponents)) {
+          setComponents(responseComponents);
+          setFilteredTotalPages(pagination?.totalPages || 1);
+          // Update allCategories only on initial fetch or when categoryFilter is cleared
+          if (!categoryFilter) {
+            const categories = Array.from(
+              new Set(responseComponents.map((comp) => comp.category).filter(Boolean))
+            );
+            setAllCategories(categories);
+          }
+        } else {
+          setComponents([]);
+          setFilteredTotalPages(1);
+        }
       } else {
-        setComponents([]);
-        setTotalPages(1);
+        // Fetch unfiltered components with main pagination
+        const response = await api.get<{
+          components: IComponentCard[];
+          pagination: {
+            total: number;
+            totalPages: number;
+            currentPage: number;
+          };
+        }>('/components', {
+          params: {
+            page,
+            limit: ITEMS_PER_PAGE,
+          },
+        });
+
+        const { components: responseComponents, pagination } = response.data;
+        if (responseComponents && Array.isArray(responseComponents)) {
+          setComponents(responseComponents);
+          setTotalPages(pagination?.totalPages || 1);
+          // Update allCategories only on initial fetch or when categoryFilter is cleared
+          if (!categoryFilter) {
+            const categories = Array.from(
+              new Set(responseComponents.map((comp) => comp.category).filter(Boolean))
+            );
+            setAllCategories(categories);
+          }
+        } else {
+          setComponents([]);
+          setTotalPages(1);
+        }
       }
     } catch (error) {
       console.error('Erro ao buscar componentes:', error);
       setError('Erro ao carregar os componentes. Por favor, verifique se o servidor está rodando e tente novamente.');
       setComponents([]);
       setTotalPages(1);
+      setFilteredTotalPages(1);
     } finally {
       setLoading(false);
     }
-  }, [page]);
-  
+  }, [page, filteredPage, categoryFilter]);
+
+
+  const searchComponents = useCallback(async (name: string) => {
+    setError(null);
+    setLoading(true);
+    try {
+      const results = await api.searchComponentsByName(name);
+      // Filter results by category if categoryFilter is set
+      const filteredResults = categoryFilter
+        ? results.filter((comp) => comp.category === categoryFilter)
+        : results;
+      setComponents(filteredResults);
+      setTotalPages(1);
+      setPage(1);
+      // Update allCategories only when search term is empty or categoryFilter is cleared
+      if (!categoryFilter) {
+        const categories = Array.from(
+          new Set(results.map((comp) => comp.category).filter(Boolean))
+        );
+        setAllCategories(categories);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar componentes por nome:', error);
+      setError('Erro ao buscar componentes. Por favor, tente novamente.');
+      setComponents([]);
+      setTotalPages(1);
+    } finally {
+      setLoading(false);
+    }
+  }, [categoryFilter]);
+
   useEffect(() => {
-    fetchComponents();
-  }, [fetchComponents]);
+    if (searchTerm.trim() === '') {
+      fetchComponents();
+    } else {
+      searchComponents(searchTerm);
+    }
+  }, [fetchComponents, searchComponents, searchTerm]);
 
   useEffect(() => {
     console.log('Estado components atualizado:', components);
   }, [components]);
+
 
   const handleSaveEdit = async (data: IEditComponentData) => {
     if (componentToEdit) {
@@ -94,7 +179,11 @@ const ListComponents: React.FC = () => {
           message: 'Componente atualizado com sucesso!',
           severity: 'success',
         });
-        fetchComponents();
+        if (searchTerm.trim() === '') {
+          fetchComponents();
+        } else {
+          searchComponents(searchTerm);
+        }
       } catch (error) {
         console.error('Erro ao atualizar componente:', error);
         setSnackbar({
@@ -127,7 +216,11 @@ const ListComponents: React.FC = () => {
           message: 'Componente excluído com sucesso!',
           severity: 'success',
         });
-        fetchComponents();
+        if (searchTerm.trim() === '') {
+          fetchComponents();
+        } else {
+          searchComponents(searchTerm);
+        }
       } catch (error) {
         console.error('Erro ao deletar componente:', error);
         setSnackbar({
@@ -143,17 +236,53 @@ const ListComponents: React.FC = () => {
   };
 
   const handlePageChange = (
-    event: React.ChangeEvent<unknown>,
+    _event: React.ChangeEvent<unknown>,
     value: number
   ) => {
-    setPage(value);
+    if (categoryFilter) {
+      setFilteredPage(value);
+    } else {
+      setPage(value);
+    }
   };
+
+
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom>
         Lista de Componentes
       </Typography>
+
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, mt: 2 }}>
+        <TextField
+          label="Buscar componentes pelo nome"
+          variant="outlined"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Digite o nome do componente"
+          fullWidth
+        />
+        <TextField
+          select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          SelectProps={{
+            native: true,
+          }}
+          sx={{ width: 250 }}
+        >
+          <option value="">Todas as categorias</option>
+          {allCategories.map((category) => (
+            <option key={category} value={category}>
+              {category}
+            </option>
+          ))}
+        </TextField>
+
+      </Box>
+
+
 
       {error && (
         <Typography color="error" sx={{ mb: 2 }}>
@@ -194,14 +323,15 @@ const ListComponents: React.FC = () => {
           {components.length > 0 && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
               <Pagination
-                count={totalPages}
-                page={page}
+                count={categoryFilter ? filteredTotalPages : totalPages}
+                page={categoryFilter ? filteredPage : page}
                 onChange={handlePageChange}
                 color="primary"
                 size="large"
               />
             </Box>
           )}
+
         </>
       )}
 
