@@ -2,6 +2,7 @@ import {
   Alert,
   Box,
   Button,
+  CircularProgress,
   Container,
   Dialog,
   DialogActions,
@@ -10,7 +11,7 @@ import {
   Pagination,
   Snackbar,
   TextField,
-  Typography
+  Typography,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -34,10 +35,22 @@ const ListProducts: React.FC = () => {
   const [filteredPage, setFilteredPage] = useState(1);
   const [filteredTotalPages, setFilteredTotalPages] = useState(1);
   const [categoryFilter, setCategoryFilter] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success' as 'success' | 'error',
+  });
 
   const ITEMS_PER_PAGE = 12;
 
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   const fetchProducts = useCallback(async () => {
+    setSnackbar({ open: false, message: '', severity: 'success' });
+    setLoading(true);
     try {
       if (categoryFilter) {
         const response = await api.get<{
@@ -100,14 +113,22 @@ const ListProducts: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error('Erro ao buscar produtos:', error);
+      setSnackbar({
+        open: true,
+        message: 'Erro ao carregar os produtos. Por favor, verifique se o servidor está rodando e tente novamente.',
+        severity: 'error',
+      });
       setProducts([]);
       setTotalPages(1);
       setFilteredTotalPages(1);
+    } finally {
+      setLoading(false);
     }
   }, [page, filteredPage, categoryFilter]);
 
   const searchProducts = useCallback(async (name: string) => {
+    setSnackbar({ open: false, message: '', severity: 'success' });
+    setLoading(true);
     try {
       const results = await api.searchProductsByName(name);
       const filteredResults = categoryFilter
@@ -123,9 +144,15 @@ const ListProducts: React.FC = () => {
         setAllCategories(categories);
       }
     } catch (error) {
-      console.error('Erro ao buscar produtos por nome:', error);
+      setSnackbar({
+        open: true,
+        message: 'Erro ao buscar produtos. Por favor, tente novamente.',
+        severity: 'error',
+      });
       setProducts([]);
       setTotalPages(1);
+    } finally {
+      setLoading(false);
     }
   }, [categoryFilter]);
 
@@ -142,7 +169,6 @@ const ListProducts: React.FC = () => {
   };
 
   const handleEditClick = (product: IProduct) => {
-    console.log('Componentes desse produto:', product.components);
     setSelectedProduct(product);
     setEditModalOpen(true);
   };
@@ -164,7 +190,11 @@ const ListProducts: React.FC = () => {
           searchProducts(searchTerm);
         }
       } catch (error) {
-        console.error('Erro ao deletar produto:', error);
+        setSnackbar({
+          open: true,
+          message: 'Erro ao deletar o produto. Por favor, tente novamente.',
+          severity: 'error',
+        });
       }
     }
   };
@@ -213,8 +243,10 @@ const ListProducts: React.FC = () => {
             setCategoryFilter(e.target.value);
             setFilteredPage(1);
           }}
-          SelectProps={{
-            native: true,
+          slotProps={{
+            select: {
+              native: true,
+            }
           }}
           sx={{ width: 250 }}
         >
@@ -225,50 +257,69 @@ const ListProducts: React.FC = () => {
             </option>
           ))}
         </TextField>
+
       </Box>
 
-      <Box sx={{ flexGrow: 1, mb: 4 }}>
-        <Grid container spacing={3}>
-          {products.map((product) => (
-            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={getId(product)}>
-              <ProductCard
-                id={getId(product)}
-                name={product.name}
-                category={product.category}
-                yield={product.yield}
-                unitOfMeasure={product.unitOfMeasure}
-                productionCost={product.productionCost ?? 0}
-                productionCostRatio={product.productionCostRatio ?? 0}
-                isComponent={false}
-                onEdit={(id: string) => {
-                  const prod = products.find((p) => getId(p) === id);
-                  if (prod) {
-                    handleEditClick(prod);
-                  }
-                }}
-                onDelete={(id: string) => {
-                  const prod = products.find((p) => getId(p) === id);
-                  if (prod) {
-                    handleDeleteClick(prod);
-                  }
-                }}
-              />
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
 
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
-
-      {products.length > 0 && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-          <Pagination
-            count={categoryFilter ? filteredTotalPages : totalPages}
-            page={categoryFilter ? filteredPage : page}
-            onChange={handlePageChange}
-            color="primary"
-            size="large"
-          />
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+          <CircularProgress />
         </Box>
+      ) : (
+        <>
+          <Box sx={{ flexGrow: 1, mb: 4 }}>
+            <Grid container spacing={3}>
+              {products.map((product) => (
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={getId(product)}>
+                  <ProductCard
+                    id={getId(product)}
+                    name={product.name}
+                    category={product.category}
+                    yield={product.yield}
+                    unitOfMeasure={product.unitOfMeasure}
+                    productionCost={product.productionCost ?? 0}
+                    productionCostRatio={product.productionCostRatio ?? 0}
+                    isComponent={false}
+                    onEdit={(id: string) => {
+                      const prod = products.find((p) => getId(p) === id);
+                      if (prod) {
+                        handleEditClick(prod);
+                      }
+                    }}
+                    onDelete={(id: string) => {
+                      const prod = products.find((p) => getId(p) === id);
+                      if (prod) {
+                        handleDeleteClick(prod);
+                      }
+                    }}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+
+          {products.length > 0 && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+              <Pagination
+                count={categoryFilter ? filteredTotalPages : totalPages}
+                page={categoryFilter ? filteredPage : page}
+                onChange={handlePageChange}
+                color="primary"
+                size="large"
+              />
+            </Box>
+          )}
+        </>
       )}
 
       {/* Modal de edição */}
@@ -296,17 +347,6 @@ const ListProducts: React.FC = () => {
           <Button color="error" onClick={handleDeleteConfirm}>Excluir</Button>
         </DialogActions>
       </Dialog>
-
-      <Snackbar
-        open={!!productToDelete}
-        autoHideDuration={3000}
-        onClose={() => setProductToDelete(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert severity="info" onClose={() => setProductToDelete(null)}>
-          Produto selecionado para exclusão
-        </Alert>
-      </Snackbar>
     </Container>
   );
 };

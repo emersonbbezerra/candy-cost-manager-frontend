@@ -20,13 +20,11 @@ import api from '../services/api';
 const ListComponents: React.FC = () => {
   const [components, setComponents] = useState<IComponentCard[]>([]);
   const [allCategories, setAllCategories] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [filteredPage, setFilteredPage] = useState(1);
   const [filteredTotalPages, setFilteredTotalPages] = useState(1);
-
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [componentToDelete, setComponentToDelete] =
@@ -49,7 +47,7 @@ const ListComponents: React.FC = () => {
   };
 
   const fetchComponents = useCallback(async () => {
-    setError(null);
+    setSnackbar({ open: false, message: '', severity: 'success' });
     setLoading(true);
     try {
       if (categoryFilter) {
@@ -117,8 +115,11 @@ const ListComponents: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error('Erro ao buscar componentes:', error);
-      setError('Erro ao carregar os componentes. Por favor, verifique se o servidor está rodando e tente novamente.');
+      setSnackbar({
+        open: true,
+        message: 'Erro ao carregar os componentes. Por favor, verifique se o servidor está rodando e tente novamente.',
+        severity: 'error',
+      });
       setComponents([]);
       setTotalPages(1);
       setFilteredTotalPages(1);
@@ -127,9 +128,8 @@ const ListComponents: React.FC = () => {
     }
   }, [page, filteredPage, categoryFilter]);
 
-
   const searchComponents = useCallback(async (name: string) => {
-    setError(null);
+    setSnackbar({ open: false, message: '', severity: 'success' });
     setLoading(true);
     try {
       const results = await api.searchComponentsByName(name);
@@ -148,8 +148,11 @@ const ListComponents: React.FC = () => {
         setAllCategories(categories);
       }
     } catch (error) {
-      console.error('Erro ao buscar componentes por nome:', error);
-      setError('Erro ao buscar componentes. Por favor, tente novamente.');
+      setSnackbar({
+        open: true,
+        message: 'Erro ao buscar componentes. Por favor, tente novamente.',
+        severity: 'error',
+      });
       setComponents([]);
       setTotalPages(1);
     } finally {
@@ -166,9 +169,7 @@ const ListComponents: React.FC = () => {
   }, [fetchComponents, searchComponents, searchTerm]);
 
   useEffect(() => {
-    console.log('Estado components atualizado:', components);
   }, [components]);
-
 
   const handleSaveEdit = async (data: IEditComponentData) => {
     if (componentToEdit) {
@@ -185,7 +186,6 @@ const ListComponents: React.FC = () => {
           searchComponents(searchTerm);
         }
       } catch (error) {
-        console.error('Erro ao atualizar componente:', error);
         setSnackbar({
           open: true,
           message:
@@ -222,7 +222,6 @@ const ListComponents: React.FC = () => {
           searchComponents(searchTerm);
         }
       } catch (error) {
-        console.error('Erro ao deletar componente:', error);
         setSnackbar({
           open: true,
           message: 'Erro ao deletar o componente. Por favor, tente novamente.',
@@ -246,8 +245,6 @@ const ListComponents: React.FC = () => {
     }
   };
 
-
-
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom>
@@ -267,8 +264,10 @@ const ListComponents: React.FC = () => {
           select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          SelectProps={{
-            native: true,
+          slotProps={{
+            select: {
+              native: true,
+            }
           }}
           sx={{ width: 250 }}
         >
@@ -281,14 +280,6 @@ const ListComponents: React.FC = () => {
         </TextField>
 
       </Box>
-
-
-
-      {error && (
-        <Typography color="error" sx={{ mb: 2 }}>
-          {error}
-        </Typography>
-      )}
 
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
@@ -309,7 +300,6 @@ const ListComponents: React.FC = () => {
                     unitOfMeasure={component.unitOfMeasure}
                     category={component.category}
                     onEdit={() => {
-                      console.log('Componente sendo editado:', component);
                       setComponentToEdit(component);
                       setEditModalOpen(true);
                     }}
