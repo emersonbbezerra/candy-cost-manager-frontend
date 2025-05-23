@@ -4,6 +4,8 @@ import { IProduct } from '../interfaces/product/IProduct';
 // Definir interface estendida
 interface ExtendedAxiosInstance extends AxiosInstance {
   fetchAvailableComponents: () => Promise<IProduct[]>;
+  searchProductsByName: (name: string) => Promise<IProduct[]>;
+  searchComponentsByName: (name: string) => Promise<any[]>;
 }
 
 // Criar instância axios com type assertion
@@ -51,6 +53,30 @@ api.fetchAvailableComponents = async (): Promise<IProduct[]> => {
     return response.data;
   } catch (error) {
     console.error('Erro ao buscar componentes disponíveis:', error);
+    throw error;
+  }
+};
+
+api.searchProductsByName = async (name: string): Promise<IProduct[]> => {
+  try {
+    const response = await api.get('/products/search', {
+      params: { name },
+    });
+    return response.data.products || response.data;
+  } catch (error) {
+    console.error('Erro ao buscar produtos por nome:', error);
+    throw error;
+  }
+};
+
+api.searchComponentsByName = async (name: string): Promise<any[]> => {
+  try {
+    const response = await api.get('/components/search', {
+      params: { name },
+    });
+    return response.data.components || response.data;
+  } catch (error) {
+    console.error('Erro ao buscar componentes por nome:', error);
     throw error;
   }
 };

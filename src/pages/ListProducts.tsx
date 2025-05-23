@@ -1,31 +1,144 @@
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, Typography } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import {
+  Alert,
+  Box,
+  Button,
+  Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Pagination,
+  Snackbar,
+  TextField,
+  Typography
+} from '@mui/material';
+import Grid from '@mui/material/Grid2';
+import React, { useCallback, useEffect, useState } from 'react';
 import EditProductModal from '../components/EditProductModal';
+import ProductCard from '../components/ProductCard';
 import { IProduct } from '../interfaces/product/IProduct';
 import api from '../services/api';
 
-const getId = (product: any) => product._id ?? product.id;
+const getId = (product: IProduct) => product.id as string;
 
 const ListProducts: React.FC = () => {
   const [products, setProducts] = useState<IProduct[]>([]);
+  const [allCategories, setAllCategories] = useState<string[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<IProduct | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [filteredPage, setFilteredPage] = useState(1);
+  const [filteredTotalPages, setFilteredTotalPages] = useState(1);
+  const [categoryFilter, setCategoryFilter] = useState<string>('');
+
+  const ITEMS_PER_PAGE = 12;
+
+  const fetchProducts = useCallback(async () => {
+    try {
+      if (categoryFilter) {
+        const response = await api.get<{
+          products: IProduct[];
+          pagination: {
+            total: number;
+            totalPages: number;
+            currentPage: number;
+          };
+        }>('/products', {
+          params: {
+            page: filteredPage,
+            limit: ITEMS_PER_PAGE,
+            category: categoryFilter,
+          },
+        });
+
+        const { products: responseProducts, pagination } = response.data;
+        if (responseProducts && Array.isArray(responseProducts)) {
+          setProducts(responseProducts);
+          setFilteredTotalPages(pagination?.totalPages || 1);
+          if (!categoryFilter) {
+            const categories = Array.from(
+              new Set(responseProducts.map((prod) => prod.category).filter(Boolean))
+            );
+            setAllCategories(categories);
+          }
+        } else {
+          setProducts([]);
+          setFilteredTotalPages(1);
+        }
+      } else {
+        const response = await api.get<{
+          products: IProduct[];
+          pagination: {
+            total: number;
+            totalPages: number;
+            currentPage: number;
+          };
+        }>('/products', {
+          params: {
+            page,
+            limit: ITEMS_PER_PAGE,
+          },
+        });
+
+        const { products: responseProducts, pagination } = response.data;
+        if (responseProducts && Array.isArray(responseProducts)) {
+          setProducts(responseProducts);
+          setTotalPages(pagination?.totalPages || 1);
+          if (!categoryFilter) {
+            const categories = Array.from(
+              new Set(responseProducts.map((prod) => prod.category).filter(Boolean))
+            );
+            setAllCategories(categories);
+          }
+        } else {
+          setProducts([]);
+          setTotalPages(1);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao buscar produtos:', error);
+      setProducts([]);
+      setTotalPages(1);
+      setFilteredTotalPages(1);
+    }
+  }, [page, filteredPage, categoryFilter]);
+
+  const searchProducts = useCallback(async (name: string) => {
+    try {
+      const results = await api.searchProductsByName(name);
+      const filteredResults = categoryFilter
+        ? results.filter((prod) => prod.category === categoryFilter)
+        : results;
+      setProducts(filteredResults);
+      setTotalPages(1);
+      setPage(1);
+      if (!categoryFilter) {
+        const categories = Array.from(
+          new Set(results.map((prod) => prod.category).filter(Boolean))
+        );
+        setAllCategories(categories);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar produtos por nome:', error);
+      setProducts([]);
+      setTotalPages(1);
+    }
+  }, [categoryFilter]);
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
-    try {
-      const response = await api.get('/products');
-      setProducts(response.data.products);
-    } catch (error) {
-      console.error('Erro ao buscar produtos', error);
+    if (searchTerm.trim() === '') {
+      fetchProducts();
+    } else {
+      searchProducts(searchTerm);
     }
+  }, [fetchProducts, searchProducts, searchTerm]);
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
   };
 
   const handleEditClick = (product: IProduct) => {
@@ -45,9 +158,13 @@ const ListProducts: React.FC = () => {
         await api.delete(`/products/${getId(productToDelete)}`);
         setDeleteDialogOpen(false);
         setProductToDelete(null);
-        fetchProducts();
+        if (searchTerm.trim() === '') {
+          fetchProducts();
+        } else {
+          searchProducts(searchTerm);
+        }
       } catch (error) {
-        console.error('Erro ao deletar produto', error);
+        console.error('Erro ao deletar produto:', error);
       }
     }
   };
@@ -55,34 +172,104 @@ const ListProducts: React.FC = () => {
   const handleSave = () => {
     setEditModalOpen(false);
     setSelectedProduct(null);
-    fetchProducts();
+    if (searchTerm.trim() === '') {
+      fetchProducts();
+    } else {
+      searchProducts(searchTerm);
+    }
+  };
+
+  const handlePageChange = (
+    _event: React.ChangeEvent<unknown>,
+    value: number
+  ) => {
+    if (categoryFilter) {
+      setFilteredPage(value);
+    } else {
+      setPage(value);
+    }
   };
 
   return (
-    <div>
-      <Typography variant="h4" gutterBottom>Lista de Produtos</Typography>
-      <Grid container spacing={2}>
-        {products.map((product) => (
-          <Grid item xs={12} sm={6} md={4} key={getId(product)}>
-            <div style={{ border: '1px solid #ccc', padding: 16, borderRadius: 8 }}>
-              <Typography variant="h6">{product.name}</Typography>
-              <Typography variant="body2">Categoria: {product.category}</Typography>
-              <Typography variant="body2">Rendimento: {product.yield} {product.unitOfMeasure}</Typography>
-              <Typography variant="body2">Custo Total de Produção: R$ {product.productionCost?.toFixed(2) ?? '0.00'}</Typography>
-              <Typography variant="body2">Taxa de Custo de Produção: R${product.productionCostRatio?.toFixed(4) ?? '0.0000'}/{product.unitOfMeasure}</Typography>
-              <Typography variant="body2">Preço de Venda: R$ {product.salePrice.toFixed(2)}</Typography>
-              <div style={{ marginTop: 8 }}>
-                <IconButton color="primary" onClick={() => handleEditClick(product)}>
-                  <EditIcon />
-                </IconButton>
-                <IconButton color="error" onClick={() => handleDeleteClick(product)}>
-                  <DeleteIcon />
-                </IconButton>
-              </div>
-            </div>
-          </Grid>
-        ))}
-      </Grid>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Typography variant="h4" gutterBottom sx={{ mb: 2 }}>
+        Lista de Produtos
+      </Typography>
+
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, mt: 2 }}>
+        <TextField
+          label="Buscar produtos pelo nome"
+          variant="outlined"
+          fullWidth
+          value={searchTerm}
+          onChange={handleSearchChange}
+          placeholder="Digite o nome do produto"
+          margin="none"
+        />
+        <TextField
+          select
+          value={categoryFilter}
+          onChange={(e) => {
+            setCategoryFilter(e.target.value);
+            setFilteredPage(1);
+          }}
+          SelectProps={{
+            native: true,
+          }}
+          sx={{ width: 250 }}
+        >
+          <option value="">Todas as categorias</option>
+          {allCategories.map((category) => (
+            <option key={category} value={category}>
+              {category}
+            </option>
+          ))}
+        </TextField>
+      </Box>
+
+      <Box sx={{ flexGrow: 1, mb: 4 }}>
+        <Grid container spacing={3}>
+          {products.map((product) => (
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={getId(product)}>
+              <ProductCard
+                id={getId(product)}
+                name={product.name}
+                category={product.category}
+                yield={product.yield}
+                unitOfMeasure={product.unitOfMeasure}
+                productionCost={product.productionCost ?? 0}
+                productionCostRatio={product.productionCostRatio ?? 0}
+                isComponent={false}
+                onEdit={(id: string) => {
+                  const prod = products.find((p) => getId(p) === id);
+                  if (prod) {
+                    handleEditClick(prod);
+                  }
+                }}
+                onDelete={(id: string) => {
+                  const prod = products.find((p) => getId(p) === id);
+                  if (prod) {
+                    handleDeleteClick(prod);
+                  }
+                }}
+              />
+
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
+
+      {products.length > 0 && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <Pagination
+            count={categoryFilter ? filteredTotalPages : totalPages}
+            page={categoryFilter ? filteredPage : page}
+            onChange={handlePageChange}
+            color="primary"
+            size="large"
+          />
+        </Box>
+      )}
 
       {/* Modal de edição */}
       {selectedProduct && (
@@ -109,7 +296,18 @@ const ListProducts: React.FC = () => {
           <Button color="error" onClick={handleDeleteConfirm}>Excluir</Button>
         </DialogActions>
       </Dialog>
-    </div>
+
+      <Snackbar
+        open={!!productToDelete}
+        autoHideDuration={3000}
+        onClose={() => setProductToDelete(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="info" onClose={() => setProductToDelete(null)}>
+          Produto selecionado para exclusão
+        </Alert>
+      </Snackbar>
+    </Container>
   );
 };
 
