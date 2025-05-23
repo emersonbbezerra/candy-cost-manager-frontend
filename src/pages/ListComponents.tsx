@@ -1,6 +1,8 @@
+import { Add as AddIcon } from '@mui/icons-material';
 import {
   Alert,
   Box,
+  Button,
   CircularProgress,
   Container,
   Pagination,
@@ -10,6 +12,7 @@ import {
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ComponentCard from '../components/ComponentCard';
 import ConfirmationModal from '../components/ConfirmationModal';
 import EditComponentModal from '../components/EditComponentModal';
@@ -18,6 +21,7 @@ import { IEditComponentData } from '../interfaces/component/IEditComponentData';
 import api from '../services/api';
 
 const ListComponents: React.FC = () => {
+  const navigate = useNavigate();
   const [components, setComponents] = useState<IComponentCard[]>([]);
   const [allCategories, setAllCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -251,7 +255,15 @@ const ListComponents: React.FC = () => {
         Lista de Componentes
       </Typography>
 
-      <Box sx={{ display: 'flex', gap: 2, mb: 2, mt: 2 }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, mt: 2, alignItems: 'center' }}>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => navigate('/components/add')}
+          sx={{ height: '56px' }}
+        >
+          Adicionar Componente
+        </Button>
         <TextField
           label="Buscar componentes pelo nome"
           variant="outlined"
@@ -269,7 +281,7 @@ const ListComponents: React.FC = () => {
               native: true,
             }
           }}
-          sx={{ width: 250 }}
+          sx={{ width: 270 }}
         >
           <option value="">Todas as categorias</option>
           {allCategories.map((category) => (
@@ -278,7 +290,6 @@ const ListComponents: React.FC = () => {
             </option>
           ))}
         </TextField>
-
       </Box>
 
       {loading ? (

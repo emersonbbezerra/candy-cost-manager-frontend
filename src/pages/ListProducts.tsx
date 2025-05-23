@@ -1,3 +1,4 @@
+import { Add as AddIcon } from '@mui/icons-material';
 import {
   Alert,
   Box,
@@ -15,6 +16,7 @@ import {
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import EditProductModal from '../components/EditProductModal';
 import ProductCard from '../components/ProductCard';
 import { IProduct } from '../interfaces/product/IProduct';
@@ -23,6 +25,7 @@ import api from '../services/api';
 const getId = (product: IProduct) => product.id as string;
 
 const ListProducts: React.FC = () => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<IProduct[]>([]);
   const [allCategories, setAllCategories] = useState<string[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
@@ -226,7 +229,15 @@ const ListProducts: React.FC = () => {
         Lista de Produtos
       </Typography>
 
-      <Box sx={{ display: 'flex', gap: 2, mb: 2, mt: 2 }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, mt: 2, alignItems: 'center' }}>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => navigate('/products/add')}
+          sx={{ height: '56px' }}
+        >
+          Adicionar Produto
+        </Button>
         <TextField
           label="Buscar produtos pelo nome"
           variant="outlined"
@@ -248,7 +259,7 @@ const ListProducts: React.FC = () => {
               native: true,
             }
           }}
-          sx={{ width: 250 }}
+          sx={{ width: 270 }}
         >
           <option value="">Todas as categorias</option>
           {allCategories.map((category) => (
@@ -257,8 +268,8 @@ const ListProducts: React.FC = () => {
             </option>
           ))}
         </TextField>
-
       </Box>
+
 
       <Snackbar
         open={snackbar.open}
