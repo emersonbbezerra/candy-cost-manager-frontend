@@ -1,12 +1,8 @@
-import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { IPrivateRouteProps } from '../interfaces/utils/IUtils';
 
-interface PrivateRouteProps {
-  children: ReactNode;
-}
-
-export const PrivateRoute = ({ children }: PrivateRouteProps) => {
+export const PrivateRoute = ({ children }: IPrivateRouteProps) => {
   const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
 

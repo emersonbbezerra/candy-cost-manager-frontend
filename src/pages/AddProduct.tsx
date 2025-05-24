@@ -21,18 +21,8 @@ import Grid from '@mui/material/Grid2';
 import React, { useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 import { useNavigate } from 'react-router-dom';
+import { IComponent, IComponentCard } from '../interfaces/component/IComponent';
 import api from '../services/api';
-
-interface IComponent {
-  componentId: string;
-  quantity: number;
-}
-
-interface ComponentSearch {
-  id: string;
-  name: string;
-  unitOfMeasure: string;
-}
 
 const AddProduct = () => {
   const navigate = useNavigate();
@@ -56,7 +46,7 @@ const AddProduct = () => {
     { componentId: '', quantity: 0 },
   ]);
 
-  const [componentOptions, setComponentOptions] = useState<ComponentSearch[]>(
+  const [componentOptions, setComponentOptions] = useState<IComponentCard[]>(
     []
   );
 

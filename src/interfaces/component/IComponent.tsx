@@ -1,6 +1,6 @@
 export interface IComponent {
   componentId: string;
-  componentName: string;
+  componentName?: string;
   quantity: number;
 }
 

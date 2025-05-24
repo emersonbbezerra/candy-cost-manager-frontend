@@ -1,6 +1,6 @@
 import { Box, Button, Modal, Typography } from '@mui/material';
 import React from 'react';
-import { IConfirmationModalProps } from '../interfaces/IConfirmationModalProps';
+import { IConfirmationModalProps } from '../interfaces/utils/IConfirmationModalProps';
 
 const ConfirmationModal: React.FC<IConfirmationModalProps> = ({
   open,

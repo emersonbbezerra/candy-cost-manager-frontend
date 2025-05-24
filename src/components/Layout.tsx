@@ -1,14 +1,11 @@
 import { ExitToApp as LogoutIcon } from '@mui/icons-material';
 import { AppBar, Box, Button, Toolbar, Typography } from '@mui/material';
-import React, { ReactNode } from 'react';
+import React from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { ILayoutProps } from '../interfaces/utils/IUtils';
 
-interface LayoutProps {
-  children?: ReactNode;
-}
-
-const Layout: React.FC<LayoutProps> = () => {
+const Layout: React.FC<ILayoutProps> = () => {
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();

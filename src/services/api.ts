@@ -1,22 +1,7 @@
-import axios, { AxiosInstance } from 'axios';
-import { IComponent, IComponentCard } from '../interfaces/component/IComponent';
+import axios from 'axios';
+import { IComponent } from '../interfaces/component/IComponent';
 import { IProduct } from '../interfaces/product/IProduct';
-
-interface ApiResponse<T> {
-  items: T[];
-  pagination: {
-    total: number;
-    totalPages: number;
-    currentPage: number;
-  };
-}
-
-interface ExtendedAxiosInstance extends AxiosInstance {
-  fetchAvailableComponents: () => Promise<ApiResponse<IComponent>>;
-  fetchAvailableProducts: () => Promise<ApiResponse<IProduct>>;
-  searchProductsByName: (name: string) => Promise<IProduct[]>;
-  searchComponentsByName: (name: string) => Promise<IComponentCard[]>;
-}
+import { IApiResponse, IExtendedAxiosInstance } from '../interfaces/utils/IUtils';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -24,7 +9,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-}) as ExtendedAxiosInstance;
+}) as IExtendedAxiosInstance;
 
 api.interceptors.response.use(
   (response) => response,
@@ -54,7 +39,7 @@ api.interceptors.response.use(
   }
 );
 
-api.fetchAvailableComponents = async (): Promise<ApiResponse<IComponent>> => {
+api.fetchAvailableComponents = async (): Promise<IApiResponse<IComponent>> => {
   try {
     const response = await api.get('/components?limit=1000');
     
@@ -68,7 +53,7 @@ api.fetchAvailableComponents = async (): Promise<ApiResponse<IComponent>> => {
   }
 };
 
-api.fetchAvailableProducts = async (): Promise<ApiResponse<IProduct>> => {
+api.fetchAvailableProducts = async (): Promise<IApiResponse<IProduct>> => {
   try {
     const response = await api.get('/products?limit=1000');
     

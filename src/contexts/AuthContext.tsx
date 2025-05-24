@@ -1,26 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { IAuthContextData, IUser } from '../interfaces/utils/IUserAuth';
 import api from '../services/api';
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-}
-
-interface AuthContextData {
-  user: User | null;
-  loading: boolean;
-  isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<User>;
-  logout: () => void;
-}
-
-const AuthContext = createContext<AuthContextData>({} as AuthContextData);
+const AuthContext = createContext<IAuthContextData>({} as IAuthContextData);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<IUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -49,11 +36,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     loadStoredData();
   }, []);
 
-  const login = async (email: string, password: string): Promise<User> => {
+  const login = async (email: string, password: string): Promise<IUser> => {
     const response = await api.post('/users/login', { email, password });
     const { token, user: userData } = response.data;
 
-    const userToStore: User = {
+    const userToStore: IUser = {
       id: userData.id,
       name: userData.name,
       email: userData.email,
