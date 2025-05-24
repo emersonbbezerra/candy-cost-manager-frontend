@@ -45,7 +45,7 @@ const ProductCard: React.FC<IProductCardProps> = ({
         </Typography>
         {isComponent && (
           <Typography color="text.secondary" sx={{ fontStyle: 'italic' }}>
-            Usado como componente
+            Usado como ingrediente
           </Typography>
         )}
 

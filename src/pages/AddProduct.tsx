@@ -52,12 +52,12 @@ const AddProduct = () => {
 
   const searchComponentsOrProducts = async (searchTerm: string) => {
     try {
-      // Primeiro, busque componentes
+      // Primeiro, busque ingredientes
       const componentResponse = await api.get(
         `/components/search?name=${searchTerm}`
       );
 
-      // Se encontrar componentes, atualize a lista de opções
+      // Se encontrar ingredientes, atualize a lista de opções
       if (componentResponse.data.length > 0) {
         setComponentOptions(componentResponse.data);
       } else {
@@ -68,7 +68,7 @@ const AddProduct = () => {
         setComponentOptions(productResponse.data); // Atualiza a lista com produtos
       }
     } catch (error) {
-      console.error('Erro ao buscar componentes ou produtos:', error);
+      console.error('Erro ao buscar ingredientes ou produtos:', error);
     }
   };
 
@@ -110,7 +110,7 @@ const AddProduct = () => {
             searchComponentsOrProducts(newInputValue);
           }}
           renderInput={(params) => (
-            <TextField {...params} label="Nome do Componente" required />
+            <TextField {...params} label="Nome do Ingrediente" required />
           )}
         />
       </Grid>
@@ -310,13 +310,13 @@ const AddProduct = () => {
                     }
                   />
                 }
-                label="Este produto também é um componente"
+                label="Este produto também é um ingrediente"
               />
             </Grid>
-            {/* Seção de Componentes */}
+            {/* Seção de Ingredientes */}
             <Grid size={{ xs: 12 }}>
               <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                Componentes
+                Ingredientes
               </Typography>
               {components.map((component, index) =>
                 renderComponentFields(component, index)
@@ -326,7 +326,7 @@ const AddProduct = () => {
                 startIcon={<AddIcon />}
                 onClick={handleAddComponent}
               >
-                Adicionar Componente
+                Adicionar Ingrediente
               </Button>
             </Grid>
           </Grid>

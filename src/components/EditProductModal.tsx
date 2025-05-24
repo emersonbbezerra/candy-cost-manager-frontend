@@ -193,13 +193,13 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ open, onClose, prod
                     </Grid>
                 </Grid>
 
-                <Typography variant="h6" sx={{ mt: 3 }}>Componentes do Produto</Typography>
+                <Typography variant="h6" sx={{ mt: 3 }}>Ingredientes do Produto</Typography>
                 <Grid container spacing={2} sx={{ mt: 1 }}>
                     {formState.components.map((component, idx) => (
                         <React.Fragment key={idx}>
                             <Grid item xs={12} sm={6}>
                                 <TextField
-                                    label="Nome do Componente"
+                                    label="Nome do Ingrediente"
                                     value={component.componentName}
                                     onChange={(e) => handleComponentChange(idx, 'componentName', e.target.value)}
                                     fullWidth
@@ -236,7 +236,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ open, onClose, prod
                     onClick={handleAddComponent}
                     sx={{ mt: 2 }}
                 >
-                    Adicionar Componente
+                    Adicionar Ingrediente
                 </Button>
 
                 <Snackbar open={showSuccess} autoHideDuration={2000} onClose={() => setShowSuccess(false)}>

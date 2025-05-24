@@ -30,7 +30,7 @@ const EditComponentModal: React.FC<IEditComponentModalProps> = ({
   }));
 
   useEffect(() => {
-    console.log('Modal recebeu novo componente:', component);
+    console.log('Modal recebeu novo ingrediente:', component);
     setFormData({
       name: component.name,
       manufacturer: component.manufacturer,
@@ -91,7 +91,7 @@ const EditComponentModal: React.FC<IEditComponentModalProps> = ({
         }}
       >
         <Typography variant="h6" component="h2" gutterBottom>
-          Editar Componente
+          Editar Ingrediente
         </Typography>
         <form onSubmit={handleSubmit}>
           <TextField

@@ -39,7 +39,7 @@ const Dashboard = () => {
           setTotalComponentes(null);
         }
       } catch (error) {
-        console.error('Erro ao buscar total de componentes:', error);
+        console.error('Erro ao buscar total de ingredientes:', error);
         setTotalComponentes(null);
       } finally {
         setLoadingComponentes(false);

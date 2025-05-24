@@ -121,7 +121,7 @@ const ListComponents: React.FC = () => {
     } catch (error) {
       setSnackbar({
         open: true,
-        message: 'Erro ao carregar os componentes. Por favor, verifique se o servidor está rodando e tente novamente.',
+        message: 'Erro ao carregar os ingredientes. Por favor, verifique se o servidor está rodando e tente novamente.',
         severity: 'error',
       });
       setComponents([]);
@@ -154,7 +154,7 @@ const ListComponents: React.FC = () => {
     } catch (error) {
       setSnackbar({
         open: true,
-        message: 'Erro ao buscar componentes. Por favor, tente novamente.',
+        message: 'Erro ao buscar ingredientes. Por favor, tente novamente.',
         severity: 'error',
       });
       setComponents([]);
@@ -181,7 +181,7 @@ const ListComponents: React.FC = () => {
         await api.put(`/components/${componentToEdit.id}`, data);
         setSnackbar({
           open: true,
-          message: 'Componente atualizado com sucesso!',
+          message: 'Ingrediente atualizado com sucesso!',
           severity: 'success',
         });
         if (searchTerm.trim() === '') {
@@ -193,7 +193,7 @@ const ListComponents: React.FC = () => {
         setSnackbar({
           open: true,
           message:
-            'Erro ao atualizar o componente. Por favor, tente novamente.',
+            'Erro ao atualizar o ingrediente. Por favor, tente novamente.',
           severity: 'error',
         });
       } finally {
@@ -217,7 +217,7 @@ const ListComponents: React.FC = () => {
         await api.delete(`/components/${componentToDelete.id}`);
         setSnackbar({
           open: true,
-          message: 'Componente excluído com sucesso!',
+          message: 'Ingrediente excluído com sucesso!',
           severity: 'success',
         });
         if (searchTerm.trim() === '') {
@@ -228,7 +228,7 @@ const ListComponents: React.FC = () => {
       } catch (error) {
         setSnackbar({
           open: true,
-          message: 'Erro ao deletar o componente. Por favor, tente novamente.',
+          message: 'Erro ao deletar o ingrediente. Por favor, tente novamente.',
           severity: 'error',
         });
       } finally {
@@ -252,7 +252,7 @@ const ListComponents: React.FC = () => {
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom>
-        Lista de Componentes
+        Lista de Ingredientes
       </Typography>
 
       <Box sx={{ display: 'flex', gap: 2, mb: 2, mt: 2, alignItems: 'center' }}>
@@ -262,14 +262,14 @@ const ListComponents: React.FC = () => {
           onClick={() => navigate('/components/add')}
           sx={{ height: '56px' }}
         >
-          Adicionar Componente
+          Adicionar Ingrediente
         </Button>
         <TextField
-          label="Buscar componentes pelo nome"
+          label="Buscar ingredientes pelo nome"
           variant="outlined"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Digite o nome do componente"
+          placeholder="Digite o nome do ingrediente"
           fullWidth
         />
         <TextField
@@ -340,7 +340,7 @@ const ListComponents: React.FC = () => {
         open={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={confirmDelete}
-        message={`Você tem certeza que deseja excluir o componente "${componentToDelete?.name}"?`}
+        message={`Você tem certeza que deseja excluir o ingrediente "${componentToDelete?.name}"?`}
       />
 
       {componentToEdit && (

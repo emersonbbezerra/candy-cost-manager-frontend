@@ -57,7 +57,7 @@ const AddComponent: React.FC = () => {
     setLoading(true);
     try {
       await api.post('/components', componentData);
-      setSnackbarMessage('Componente criado com sucesso!');
+      setSnackbarMessage('Ingrediente criado com sucesso!');
       setSeverity('success');
       setSeverityVariant('filled');
       setOpenSnackbar(true);
@@ -81,12 +81,12 @@ const AddComponent: React.FC = () => {
           'Component with this name and manufacturer already exists'
         )
       ) {
-        setSnackbarMessage('Componente com esse nome e fabricante já existe!');
+        setSnackbarMessage('Ingrediente com esse nome e fabricante já existe!');
         setSeverity('error');
         setSeverityVariant('filled');
         setOpenSnackbar(true);
       } else {
-        setSnackbarMessage('Erro ao criar componente!');
+        setSnackbarMessage('Erro ao criar ingrediente!');
         setSeverity('error');
         setSeverityVariant('filled');
         setOpenSnackbar(true);
@@ -100,7 +100,7 @@ const AddComponent: React.FC = () => {
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Paper sx={{ p: 4 }}>
         <Typography variant="h4" gutterBottom>
-          Adicionar Novo Componente
+          Adicionar Novo Ingrediente
         </Typography>
         <Divider sx={{ mb: 4 }} />
         <form onSubmit={handleSubmit}>
@@ -214,7 +214,7 @@ const AddComponent: React.FC = () => {
                 startIcon={<AddIcon />}
                 disabled={loading}
               >
-                {loading ? 'Adicionando...' : 'Adicionar Componente'}
+                {loading ? 'Adicionando...' : 'Adicionar Ingrediente'}
               </Button>
             </Grid>
           </Grid>
