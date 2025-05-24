@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
-import { IComponent } from '../interfaces/component/IComponent';
+import { IComponent, IComponentCard } from '../interfaces/component/IComponent';
 import { IProduct } from '../interfaces/product/IProduct';
 
 interface ApiResponse<T> {
@@ -15,7 +15,7 @@ interface ExtendedAxiosInstance extends AxiosInstance {
   fetchAvailableComponents: () => Promise<ApiResponse<IComponent>>;
   fetchAvailableProducts: () => Promise<ApiResponse<IProduct>>;
   searchProductsByName: (name: string) => Promise<IProduct[]>;
-  searchComponentsByName: (name: string) => Promise<IComponent[]>;
+  searchComponentsByName: (name: string) => Promise<IComponentCard[]>;
 }
 
 const api = axios.create({
