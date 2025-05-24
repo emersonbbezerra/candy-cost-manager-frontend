@@ -9,19 +9,66 @@ import {
 } from '@mui/icons-material';
 import { Box, Button, CircularProgress, Container, Paper, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import api from '../services/api';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { loading, isAuthenticated, user } = useAuth();
+  const [totalComponentes, setTotalComponentes] = useState<number | null>(null);
+  const [loadingComponentes, setLoadingComponentes] = useState<boolean>(true);
+  const [totalProdutos, setTotalProdutos] = useState<number | null>(null);
+  const [loadingProdutos, setLoadingProdutos] = useState<boolean>(true);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
       navigate('/login');
     }
   }, [loading, isAuthenticated, navigate, user]);
+
+  useEffect(() => {
+    const fetchTotalComponentes = async () => {
+      try {
+        setLoadingComponentes(true);
+        const data = await api.fetchAvailableComponents();
+        if (data && data.pagination && typeof data.pagination.total === 'number') {
+          setTotalComponentes(data.pagination.total);
+        } else {
+          setTotalComponentes(null);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar total de componentes:', error);
+        setTotalComponentes(null);
+      } finally {
+        setLoadingComponentes(false);
+      }
+    };
+
+    fetchTotalComponentes();
+  }, []);
+
+  useEffect(() => {
+    const fetchTotalProdutos = async () => {
+      try {
+        setLoadingProdutos(true);
+        const data = await api.fetchAvailableProducts();
+        if (data && data.pagination && typeof data.pagination.total === 'number') {
+          setTotalProdutos(data.pagination.total);
+        } else {
+          setTotalProdutos(null);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar total de produtos:', error);
+        setTotalProdutos(null);
+      } finally {
+        setLoadingProdutos(false);
+      }
+    };
+
+    fetchTotalProdutos();
+  }, []);
 
   if (loading) {
     return (
@@ -57,7 +104,7 @@ const Dashboard = () => {
               Total de Produtos
             </Typography>
             <Typography component="p" variant="h4">
-              42
+              {loadingProdutos ? <CircularProgress size={24} /> : (totalProdutos !== null ? totalProdutos : '—')}
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <ShoppingBag sx={{ mr: 1 }} />
@@ -79,10 +126,10 @@ const Dashboard = () => {
               color="primary"
               gutterBottom
             >
-              Total de Componentes
+              Total de Ingredientes
             </Typography>
             <Typography component="p" variant="h4">
-              156
+              {loadingComponentes ? <CircularProgress size={24} /> : (totalComponentes !== null ? totalComponentes : '—')}
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Inventory sx={{ mr: 1 }} />
@@ -173,7 +220,7 @@ const Dashboard = () => {
         <Grid size={{ xs: 12, md: 4 }}>
           <Paper sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom>
-              Gerenciar Componentes
+              Gerenciar Ingredientes
             </Typography>
             <Button
               variant="contained"
@@ -182,7 +229,7 @@ const Dashboard = () => {
               sx={{ mb: 1 }}
               onClick={() => navigate('/components/add')}
             >
-              Adicionar Novo Componente
+              Adicionar Novo Ingrediente
             </Button>
             <Button
               variant="outlined"
@@ -191,7 +238,7 @@ const Dashboard = () => {
               sx={{ mb: 1 }}
               onClick={() => navigate('/components')}
             >
-              Lista de Componentes
+              Lista de Ingredientes
             </Button>
             <Button variant="outlined" startIcon={<Calculate />} fullWidth>
               Atualizar Preços

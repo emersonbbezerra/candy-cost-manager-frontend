@@ -1,14 +1,23 @@
 import axios, { AxiosInstance } from 'axios';
+import { IComponent } from '../interfaces/component/IComponent';
 import { IProduct } from '../interfaces/product/IProduct';
 
-// Definir interface estendida
-interface ExtendedAxiosInstance extends AxiosInstance {
-  fetchAvailableComponents: () => Promise<IProduct[]>;
-  searchProductsByName: (name: string) => Promise<IProduct[]>;
-  searchComponentsByName: (name: string) => Promise<any[]>;
+interface ApiResponse<T> {
+  items: T[];
+  pagination: {
+    total: number;
+    totalPages: number;
+    currentPage: number;
+  };
 }
 
-// Criar instância axios com type assertion
+interface ExtendedAxiosInstance extends AxiosInstance {
+  fetchAvailableComponents: () => Promise<ApiResponse<IComponent>>;
+  fetchAvailableProducts: () => Promise<ApiResponse<IProduct>>;
+  searchProductsByName: (name: string) => Promise<IProduct[]>;
+  searchComponentsByName: (name: string) => Promise<IComponent[]>;
+}
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
@@ -17,7 +26,6 @@ const api = axios.create({
   },
 }) as ExtendedAxiosInstance;
 
-// Configurar interceptors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -46,13 +54,30 @@ api.interceptors.response.use(
   }
 );
 
-// Adicionar método customizado
-api.fetchAvailableComponents = async (): Promise<IProduct[]> => {
+api.fetchAvailableComponents = async (): Promise<ApiResponse<IComponent>> => {
   try {
     const response = await api.get('/components?limit=1000');
-    return response.data;
+    
+    return {
+      items: response.data.components,
+      pagination: response.data.pagination,
+    };
   } catch (error) {
     console.error('Erro ao buscar componentes disponíveis:', error);
+    throw error;
+  }
+};
+
+api.fetchAvailableProducts = async (): Promise<ApiResponse<IProduct>> => {
+  try {
+    const response = await api.get('/products?limit=1000');
+    
+    return {
+      items: response.data.products,
+      pagination: response.data.pagination,
+    };
+  } catch (error) {
+    console.error('Erro ao buscar produtos disponíveis:', error);
     throw error;
   }
 };
