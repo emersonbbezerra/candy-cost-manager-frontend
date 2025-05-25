@@ -28,6 +28,7 @@ const AddProduct = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [severity, setSeverity] = useState<'success' | 'error'>('success');
   const [severityVariant, setSeverityVariant] = useState<'filled'>('filled');
@@ -167,6 +168,19 @@ const AddProduct = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCancelClick = () => {
+    setConfirmCancelOpen(true);
+  };
+
+  const handleConfirmCancel = () => {
+    setConfirmCancelOpen(false);
+    navigate('/');
+  };
+
+  const handleCloseCancelSnackbar = () => {
+    setConfirmCancelOpen(false);
   };
 
   return (
@@ -330,15 +344,29 @@ const AddProduct = () => {
               </Button>
             </Grid>
           </Grid>
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            sx={{ mt: 4 }}
-            disabled={loading}
-          >
-            {loading ? 'Adicionando...' : 'Adicionar Produto'}
-          </Button>
+          <Grid container spacing={2} sx={{ mt: 4 }}>
+            <Grid>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                disabled={loading}
+              >
+                {loading ? 'Adicionando...' : 'Salvar'}
+              </Button>
+            </Grid>
+            <Grid>
+              <Button
+                variant="outlined"
+                color="secondary"
+                disabled={loading}
+                onClick={handleCancelClick}
+                sx={{ ml: 2 }}
+              >
+                Cancelar
+              </Button>
+            </Grid>
+          </Grid>
         </form>
       </Paper>
 
@@ -355,6 +383,30 @@ const AddProduct = () => {
           sx={{ width: '100%' }}
         >
           {snackbarMessage}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={confirmCancelOpen}
+        onClose={handleCloseCancelSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          severity="warning"
+          variant="filled"
+          action={
+            <>
+              <Button color="inherit" size="small" onClick={handleConfirmCancel}>
+                Sim
+              </Button>
+              <Button color="inherit" size="small" onClick={handleCloseCancelSnackbar}>
+                Não
+              </Button>
+            </>
+          }
+          sx={{ width: '100%' }}
+        >
+          Deseja mesmo cancelar o cadastro?
         </Alert>
       </Snackbar>
     </Container>

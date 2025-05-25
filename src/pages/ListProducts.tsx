@@ -5,10 +5,6 @@ import {
   Button,
   CircularProgress,
   Container,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Pagination,
   Snackbar,
   TextField,
@@ -30,8 +26,6 @@ const ListProducts: React.FC = () => {
   const [allCategories, setAllCategories] = useState<string[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [productToDelete, setProductToDelete] = useState<IProduct | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -45,10 +39,19 @@ const ListProducts: React.FC = () => {
     severity: 'success' as 'success' | 'error',
   });
 
+  // New state for delete confirmation snackbar
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<IProduct | null>(null);
+
   const ITEMS_PER_PAGE = 12;
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
+  };
+
+  const handleCloseConfirmDelete = () => {
+    setConfirmDeleteOpen(false);
+    setProductToDelete(null);
   };
 
   const fetchProducts = useCallback(async () => {
@@ -176,22 +179,29 @@ const ListProducts: React.FC = () => {
     setEditModalOpen(true);
   };
 
+  // New handler to open snackbar confirmation for delete
   const handleDeleteClick = (product: IProduct) => {
     setProductToDelete(product);
-    setDeleteDialogOpen(true);
+    setConfirmDeleteOpen(true);
   };
 
+  // Confirm delete handler triggered by snackbar "Sim" button
   const handleDeleteConfirm = async () => {
     if (productToDelete) {
       try {
         await api.delete(`/products/${getId(productToDelete)}`);
-        setDeleteDialogOpen(false);
+        setConfirmDeleteOpen(false);
         setProductToDelete(null);
         if (searchTerm.trim() === '') {
           fetchProducts();
         } else {
           searchProducts(searchTerm);
         }
+        setSnackbar({
+          open: true,
+          message: 'Produto excluído com sucesso!',
+          severity: 'success',
+        });
       } catch (error) {
         setSnackbar({
           open: true,
@@ -270,15 +280,48 @@ const ListProducts: React.FC = () => {
         </TextField>
       </Box>
 
-
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          iconMapping={{
+            success: <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" fill="#fff" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5 1.41-1.41L9 13.38l7.09-7.09 1.41 1.41z" /></svg>,
+            error: <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" fill="#fff" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z" /></svg>,
+          }}
+          sx={{
+            backgroundColor: snackbar.severity === 'success' ? '#4caf50' : snackbar.severity === 'error' ? '#f44336' : undefined,
+            color: '#fff',
+          }}
+        >
           {snackbar.message}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={confirmDeleteOpen}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          severity="warning"
+          variant="filled"
+          action={
+            <>
+              <Button color="inherit" size="small" onClick={handleDeleteConfirm}>
+                Sim
+              </Button>
+              <Button color="inherit" size="small" onClick={handleCloseConfirmDelete}>
+                Não
+              </Button>
+            </>
+          }
+          sx={{ width: '100%' }}
+        >
+          Tem certeza que deseja excluir este produto?
         </Alert>
       </Snackbar>
 
@@ -348,16 +391,6 @@ const ListProducts: React.FC = () => {
           onSave={handleSave}
         />
       )}
-
-      {/* Diálogo de confirmação de exclusão */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Confirmação</DialogTitle>
-        <DialogContent>Tem certeza que deseja excluir este produto?</DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancelar</Button>
-          <Button color="error" onClick={handleDeleteConfirm}>Excluir</Button>
-        </DialogActions>
-      </Dialog>
     </Container>
   );
 };

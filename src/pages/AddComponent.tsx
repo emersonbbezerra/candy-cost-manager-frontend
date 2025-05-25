@@ -23,6 +23,7 @@ const AddComponent: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [severity, setSeverity] = useState<'success' | 'error'>('success');
   const [severityVariant, setSeverityVariant] = useState<'filled'>('filled');
@@ -94,6 +95,19 @@ const AddComponent: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCancelClick = () => {
+    setConfirmCancelOpen(true);
+  };
+
+  const handleConfirmCancel = () => {
+    setConfirmCancelOpen(false);
+    navigate('/');
+  };
+
+  const handleCloseCancelSnackbar = () => {
+    setConfirmCancelOpen(false);
   };
 
   return (
@@ -214,7 +228,16 @@ const AddComponent: React.FC = () => {
                 startIcon={<AddIcon />}
                 disabled={loading}
               >
-                {loading ? 'Adicionando...' : 'Adicionar Ingrediente'}
+                {loading ? 'Adicionando...' : 'Salvar'}
+              </Button>
+              <Button
+                variant="outlined"
+                color="secondary"
+                sx={{ ml: 2 }}
+                disabled={loading}
+                onClick={handleCancelClick}
+              >
+                Cancelar
               </Button>
             </Grid>
           </Grid>
@@ -231,8 +254,32 @@ const AddComponent: React.FC = () => {
           onClose={() => setOpenSnackbar(false)}
           severity={severity}
           variant={severityVariant}
+          sx={{ width: '100%' }}
         >
           {snackbarMessage}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={confirmCancelOpen}
+        onClose={handleCloseCancelSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          severity="warning"
+          variant="filled"
+          action={
+            <>
+              <Button color="inherit" size="small" onClick={handleConfirmCancel}>
+                Sim
+              </Button>
+              <Button color="inherit" size="small" onClick={handleCloseCancelSnackbar}>
+                Não
+              </Button>
+            </>
+          }
+        >
+          Deseja mesmo cancelar o cadastro?
         </Alert>
       </Snackbar>
     </Container>

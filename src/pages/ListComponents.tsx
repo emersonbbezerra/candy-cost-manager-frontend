@@ -14,7 +14,6 @@ import Grid from '@mui/material/Grid2';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ComponentCard from '../components/ComponentCard';
-import ConfirmationModal from '../components/ConfirmationModal';
 import EditComponentModal from '../components/EditComponentModal';
 import { IComponentCard } from '../interfaces/component/IComponent';
 import { IEditComponentData } from '../interfaces/component/IEditComponentData';
@@ -29,13 +28,11 @@ const ListComponents: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [filteredPage, setFilteredPage] = useState(1);
   const [filteredTotalPages, setFilteredTotalPages] = useState(1);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  // Removed deleteModalOpen state
+  const [componentToDelete, setComponentToDelete] = useState<IComponentCard | null>(null);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [componentToDelete, setComponentToDelete] =
-    useState<IComponentCard | null>(null);
-  const [componentToEdit, setComponentToEdit] = useState<IComponentCard | null>(
-    null
-  );
+  const [componentToEdit, setComponentToEdit] = useState<IComponentCard | null>(null);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -48,6 +45,11 @@ const ListComponents: React.FC = () => {
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
+  };
+
+  const handleCloseConfirmDelete = () => {
+    setConfirmDeleteOpen(false);
+    setComponentToDelete(null);
   };
 
   const fetchComponents = useCallback(async () => {
@@ -172,9 +174,6 @@ const ListComponents: React.FC = () => {
     }
   }, [fetchComponents, searchComponents, searchTerm]);
 
-  useEffect(() => {
-  }, [components]);
-
   const handleSaveEdit = async (data: IEditComponentData) => {
     if (componentToEdit) {
       try {
@@ -203,36 +202,45 @@ const ListComponents: React.FC = () => {
     }
   };
 
+  // Modified handleDelete to open snackbar confirmation
   const handleDelete = (id: string) => {
     const component = components.find((comp) => comp.id === id);
     if (component) {
       setComponentToDelete(component);
-      setDeleteModalOpen(true);
+      setConfirmDeleteOpen(true);
     }
   };
 
+  // Confirm delete handler triggered by snackbar "Sim" button
   const confirmDelete = async () => {
     if (componentToDelete) {
+      setConfirmDeleteOpen(false); // Close confirmation snackbar immediately
       try {
         await api.delete(`/components/${componentToDelete.id}`);
-        setSnackbar({
-          open: true,
-          message: 'Ingrediente excluído com sucesso!',
-          severity: 'success',
-        });
+        // Force snackbar state update by resetting open to false first
+        setSnackbar((prev) => ({ ...prev, open: false }));
+        setTimeout(() => {
+          setSnackbar({
+            open: true,
+            message: 'Ingrediente excluído com sucesso!',
+            severity: 'success',
+          });
+        }, 100);
         if (searchTerm.trim() === '') {
           fetchComponents();
         } else {
           searchComponents(searchTerm);
         }
       } catch (error) {
-        setSnackbar({
-          open: true,
-          message: 'Erro ao deletar o ingrediente. Por favor, tente novamente.',
-          severity: 'error',
-        });
+        setSnackbar((prev) => ({ ...prev, open: false }));
+        setTimeout(() => {
+          setSnackbar({
+            open: true,
+            message: 'Erro ao deletar o ingrediente. Por favor, tente novamente.',
+            severity: 'error',
+          });
+        }, 100);
       } finally {
-        setDeleteModalOpen(false);
         setComponentToDelete(null);
       }
     }
@@ -332,16 +340,53 @@ const ListComponents: React.FC = () => {
               />
             </Box>
           )}
-
         </>
       )}
 
-      <ConfirmationModal
-        open={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        onConfirm={confirmDelete}
-        message={`Você tem certeza que deseja excluir o ingrediente "${componentToDelete?.name}"?`}
-      />
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          iconMapping={{
+            success: <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" fill="#fff" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5 1.41-1.41L9 13.38l7.09-7.09 1.41 1.41z" /></svg>,
+            error: <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" fill="#fff" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z" /></svg>,
+          }}
+          sx={{
+            backgroundColor: snackbar.severity === 'success' ? '#4caf50' : snackbar.severity === 'error' ? '#f44336' : undefined,
+            color: '#fff',
+          }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={confirmDeleteOpen}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          severity="warning"
+          variant="filled"
+          action={
+            <>
+              <Button color="inherit" size="small" onClick={confirmDelete}>
+                Sim
+              </Button>
+              <Button color="inherit" size="small" onClick={handleCloseConfirmDelete}>
+                Não
+              </Button>
+            </>
+          }
+          sx={{ width: '100%' }}
+        >
+          Tem certeza que deseja excluir este ingrediente?
+        </Alert>
+      </Snackbar>
 
       {componentToEdit && (
         <EditComponentModal
@@ -354,18 +399,8 @@ const ListComponents: React.FC = () => {
           component={componentToEdit}
         />
       )}
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Container>
   );
 };
+
 export default ListComponents;
